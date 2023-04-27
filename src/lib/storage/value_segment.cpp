@@ -46,6 +46,7 @@ void ValueSegment<T>::append(const AllTypeVariant& value) {
     _values.push_back(type_cast<T>(0));
     _is_null.push_back(true);
   } else {
+    // TODO: fix me (maybe with auto/ common type/ is numeric
     //Assert(std::is_arithmetic_v(value) || std::is_same_v(T, typeid(value).name()),"Cannot convert String to numerical");
     _values.push_back(type_cast<T>(value));
     _is_null.push_back(false);
@@ -77,7 +78,7 @@ const std::vector<bool>& ValueSegment<T>::null_values() const {
 
 template <typename T>
 size_t ValueSegment<T>::estimate_memory_usage() const {
-  return _values.size() * sizeof(T);
+  return _values.capacity() * sizeof(T);
 }
 
 // Macro to instantiate the following classes:
