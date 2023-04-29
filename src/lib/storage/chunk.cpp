@@ -11,7 +11,7 @@ void Chunk::add_segment(const std::shared_ptr<AbstractSegment> segment) {
 
 void Chunk::append(const std::vector<AllTypeVariant>& values) {
   DebugAssert(values.size() == _segments.size(), "There must be the same amount of values as in the segment!");
-  for (size_t i = 0; i < values.size(); ++i) {
+  for (auto i = size_t{0}; i < values.size(); ++i) {
     auto segment = _segments[i];
     segment->append(values[i]);
   }
