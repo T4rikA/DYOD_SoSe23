@@ -11,7 +11,7 @@ void Chunk::add_segment(const std::shared_ptr<AbstractSegment> segment) {
 
 void Chunk::append(const std::vector<AllTypeVariant>& values) {
   DebugAssert(values.size() == _segments.size(), "There must be the same amount of values as in the segment!");
-  for(size_t i = 0; i < values.size(); ++i){
+  for (size_t i = 0; i < values.size(); ++i) {
     auto segment = _segments[i];
     segment->append(values[i]);
   }
@@ -26,8 +26,8 @@ ColumnCount Chunk::column_count() const {
 }
 
 ChunkOffset Chunk::size() const {
-  if(_segments.size()){
-    return _segments[0] -> size();
+  if (_segments.size()) {
+    return _segments[0]->size();
   }
   return 0;
 }
