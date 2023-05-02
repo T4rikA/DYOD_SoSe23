@@ -47,8 +47,16 @@ std::vector<std::string> StorageManager::table_names() const {
 }
 
 void StorageManager::print(std::ostream& out) const {
-  // Implementation goes here
-  Fail("Implementation is missing.");
+  for (auto const& [table_name, table] : _tables) {
+    out << "=== " << table_name << " ===" << std::endl;
+    out << "n columns: " << table->column_count() << std::endl;
+    out << "n rows: " << table->row_count() << std::endl;
+    out << "n chunks: " << table->chunk_count() << std::endl;
+    out << "columns:" << std::endl;
+    for (auto column_id = ColumnID{0}; column_id < table->column_count(); column_id++) {
+      out << "  " << table->column_name(column_id) << " (" << table->column_type(column_id) << ")" << std::endl;
+    }
+  }
 }
 
 void StorageManager::reset() {
