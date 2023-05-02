@@ -26,9 +26,6 @@ class AbstractSegment : private Noncopyable {
   // Returns the number of values.
   virtual ChunkOffset size() const = 0;
 
-  // Adds a new row, given as a list of values, to the chunk
-  virtual void append(const AllTypeVariant& value) = 0;
-
   // Returns the calculated memory usage.
   virtual size_t estimate_memory_usage() const = 0;
 };

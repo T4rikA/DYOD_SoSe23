@@ -71,7 +71,7 @@ ChunkID Table::chunk_count() const {
 }
 
 ColumnID Table::column_id_by_name(const std::string& column_name) const {
-  for (auto index = int32_t{0}; index < _column_count; ++index) {
+  for (auto index = uint16_t{0}; index < _column_count; ++index) {
     if (_column_names.at(index) == column_name) {
       return ColumnID{index};
     }

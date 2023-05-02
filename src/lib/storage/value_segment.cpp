@@ -46,10 +46,13 @@ void ValueSegment<T>::append(const AllTypeVariant& value) {
     value_vector.push_back(type_cast<T>(0));
     is_null_vector.push_back(true);
   } else {
-    // TODO: fix me (maybe with auto/ common type/ is numeric
-    //Assert(std::is_arithmetic_v(value) || std::is_same_v(T, typeid(value).name()),"Cannot convert String to numerical");
-    value_vector.push_back(type_cast<T>(value));
-    is_null_vector.push_back(false);
+    try{
+      value_vector.push_back(type_cast<T>(value));
+      is_null_vector.push_back(false);
+    }
+    catch (...) {
+      throw std::logic_error{"Wrong argument type"};
+    }
   }
 }
 
