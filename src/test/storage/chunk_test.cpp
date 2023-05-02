@@ -54,4 +54,12 @@ TEST_F(StorageChunkTest, RetrieveSegment) {
   EXPECT_EQ(segment->size(), 4);
 }
 
+TEST_F(StorageChunkTest, ColumnCount) {
+  EXPECT_EQ(chunk.column_count(), 0u);
+  chunk.add_segment(int_value_segment);
+  EXPECT_EQ(chunk.column_count(), 1u);
+  chunk.add_segment(string_value_segment);
+  EXPECT_EQ(chunk.column_count(), 2u);
+}
+
 }  // namespace opossum

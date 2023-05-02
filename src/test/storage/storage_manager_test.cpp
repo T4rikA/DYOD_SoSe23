@@ -1,6 +1,7 @@
 #include "base_test.hpp"
 
 #include "storage/storage_manager.hpp"
+#include <sstream>
 
 namespace opossum {
 
@@ -46,4 +47,19 @@ TEST_F(StorageStorageManagerTest, HasTable) {
   EXPECT_EQ(storage_manager.has_table("first_table"), true);
 }
 
+TEST_F(StorageStorageManagerTest, TableNames) {
+  auto& storage_manager = StorageManager::get();
+  EXPECT_EQ(storage_manager.table_names(), (std::vector<std::string>{"second_table", "first_table"}));
+}
+
+TEST_F(StorageStorageManagerTest, PrintSimpleTables) {
+  auto& storage_manager = StorageManager::get();
+  std::ostringstream oss;
+  storage_manager.print(oss);
+  EXPECT_EQ(
+      oss.str(),
+      "=== second_table ===\nn columns: 0\nn rows: 0\nn chunks: 1\ncolumns:\n"
+      "=== first_table ===\nn columns: 0\nn rows: 0\nn chunks: 1\ncolumns:\n"
+  );
+}
 }  // namespace opossum

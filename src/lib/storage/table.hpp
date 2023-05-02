@@ -54,7 +54,7 @@ class Table : private Noncopyable {
 
   // Adds a column to the end, i.e., right, of the table. This can only be done if the table does not yet have any
   // entries, because we would otherwise have to deal with default values.
-  void add_column(const std::string& name, const std::string& type, const bool nullable);
+  void add_column(const std::string& name, const std::string& type, const bool nullable = false);
 
   // Inserts a row at the end of the table. Note this is slow and not thread-safe and should be used for testing
   // purposes only.
