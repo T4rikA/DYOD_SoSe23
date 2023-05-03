@@ -62,4 +62,18 @@ TEST_F(StorageStorageManagerTest, PrintSimpleTables) {
       "=== first_table ===\nn columns: 0\nn rows: 0\nn chunks: 1\ncolumns:\n"
   );
 }
+
+TEST_F(StorageStorageManagerTest, PrintComplexTables) {
+  auto& storage_manager = StorageManager::get();
+  auto table_a = storage_manager.get_table("first_table");
+  table_a->add_column("first_column", "string", false);
+
+  std::ostringstream oss;
+  storage_manager.print(oss);
+  EXPECT_EQ(
+      oss.str(),
+      "=== second_table ===\nn columns: 0\nn rows: 0\nn chunks: 1\ncolumns:\n"
+      "=== first_table ===\nn columns: 1\nn rows: 0\nn chunks: 1\ncolumns:\n  first_column (string)\n"
+  );
+}
 }  // namespace opossum
