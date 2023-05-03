@@ -9,10 +9,25 @@ namespace opossum {
 class StorageChunkTest : public BaseTest {
  protected:
   void SetUp() override {
-    int_value_segment = std::make_shared<ValueSegment<int32_t>>();
-    int_value_segment->append(4);
-    int_value_segment->append(6);
-    int_value_segment->append(3);
+    int32_value_segment = std::make_shared<ValueSegment<int32_t>>();
+    int32_value_segment->append(4);
+    int32_value_segment->append(6);
+    int32_value_segment->append(3);
+
+    int64_value_segment = std::make_shared<ValueSegment<int64_t>>();
+    int64_value_segment->append(4);
+    int64_value_segment->append(6);
+    int64_value_segment->append(3);
+
+    float_value_segment = std::make_shared<ValueSegment<float>>();
+    float_value_segment->append(4.0);
+    float_value_segment->append(6.0);
+    float_value_segment->append(3.0);
+
+    double_value_segment = std::make_shared<ValueSegment<double>>();
+    double_value_segment->append(4.0);
+    double_value_segment->append(6.0);
+    double_value_segment->append(3.0);
 
     string_value_segment = std::make_shared<ValueSegment<std::string>>();
     string_value_segment->append("Hello,");
@@ -21,21 +36,27 @@ class StorageChunkTest : public BaseTest {
   }
 
   Chunk chunk;
-  std::shared_ptr<ValueSegment<int32_t>> int_value_segment{};
+  std::shared_ptr<ValueSegment<int32_t>> int32_value_segment{};
+  std::shared_ptr<ValueSegment<int64_t>> int64_value_segment{};
   std::shared_ptr<ValueSegment<std::string>> string_value_segment{};
+  std::shared_ptr<ValueSegment<float>> float_value_segment{};
+  std::shared_ptr<ValueSegment<double>> double_value_segment{};
 };
 
 TEST_F(StorageChunkTest, AddSegmentToChunk) {
   EXPECT_EQ(chunk.size(), 0);
-  chunk.add_segment(int_value_segment);
+  chunk.add_segment(int32_value_segment);
   chunk.add_segment(string_value_segment);
   EXPECT_EQ(chunk.size(), 3);
 }
 
 TEST_F(StorageChunkTest, AddValuesToChunk) {
-  chunk.add_segment(int_value_segment);
+  chunk.add_segment(int32_value_segment);
+  chunk.add_segment(int64_value_segment);
   chunk.add_segment(string_value_segment);
-  chunk.append({2, "two"});
+  chunk.add_segment(float_value_segment);
+  chunk.add_segment(double_value_segment);
+  chunk.append({2, 7, "two", 20.5, 7.2});
   EXPECT_EQ(chunk.size(), 4);
 
   if constexpr (OPOSSUM_DEBUG) {
@@ -46,7 +67,7 @@ TEST_F(StorageChunkTest, AddValuesToChunk) {
 }
 
 TEST_F(StorageChunkTest, RetrieveSegment) {
-  chunk.add_segment(int_value_segment);
+  chunk.add_segment(int32_value_segment);
   chunk.add_segment(string_value_segment);
   chunk.append({2, "two"});
 
@@ -56,7 +77,7 @@ TEST_F(StorageChunkTest, RetrieveSegment) {
 
 TEST_F(StorageChunkTest, ColumnCount) {
   EXPECT_EQ(chunk.column_count(), 0u);
-  chunk.add_segment(int_value_segment);
+  chunk.add_segment(int32_value_segment);
   EXPECT_EQ(chunk.column_count(), 1u);
   chunk.add_segment(string_value_segment);
   EXPECT_EQ(chunk.column_count(), 2u);
