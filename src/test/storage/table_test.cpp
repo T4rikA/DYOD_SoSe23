@@ -28,8 +28,11 @@ TEST_F(StorageTableTest, GetChunk) {
   table.append({6, "world"});
   table.append({3, "!"});
   table.get_chunk(ChunkID{1});
-  const auto chunk = table.get_chunk(ChunkID{0});
-  EXPECT_EQ(chunk->size(), 2);
+  const auto& reference = table;
+  const auto chunk_1 = table.get_chunk(ChunkID{0});
+  const auto chunk_2 = reference.get_chunk(ChunkID{1});
+  EXPECT_EQ(chunk_1->size(), 2);
+  EXPECT_EQ(chunk_2->size(), 1);
   EXPECT_THROW(table.get_chunk(ChunkID{7}), std::logic_error);
 }
 
