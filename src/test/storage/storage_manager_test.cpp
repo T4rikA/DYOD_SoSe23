@@ -1,6 +1,4 @@
 #include "base_test.hpp"
-
-#include <sstream>
 #include "storage/storage_manager.hpp"
 
 namespace opossum {
