@@ -112,6 +112,7 @@ void Table::compress_chunk(const ChunkID chunk_id) {
   // Implementation goes here
   Fail("Implementation is missing.");
 }
+
 // GCOVR_EXCL_STOP
 
 }  // namespace opossum

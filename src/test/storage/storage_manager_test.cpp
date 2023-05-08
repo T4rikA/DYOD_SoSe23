@@ -1,7 +1,7 @@
 #include "base_test.hpp"
 
-#include "storage/storage_manager.hpp"
 #include <sstream>
+#include "storage/storage_manager.hpp"
 
 namespace opossum {
 
@@ -56,11 +56,9 @@ TEST_F(StorageStorageManagerTest, PrintSimpleTables) {
   auto& storage_manager = StorageManager::get();
   std::ostringstream oss;
   storage_manager.print(oss);
-  EXPECT_EQ(
-      oss.str(),
-      "=== second_table ===\nn columns: 0\nn rows: 0\nn chunks: 1\ncolumns:\n"
-      "=== first_table ===\nn columns: 0\nn rows: 0\nn chunks: 1\ncolumns:\n"
-  );
+  EXPECT_EQ(oss.str(),
+            "=== second_table ===\nn columns: 0\nn rows: 0\nn chunks: 1\ncolumns:\n"
+            "=== first_table ===\nn columns: 0\nn rows: 0\nn chunks: 1\ncolumns:\n");
 }
 
 TEST_F(StorageStorageManagerTest, PrintComplexTables) {
@@ -70,10 +68,8 @@ TEST_F(StorageStorageManagerTest, PrintComplexTables) {
 
   std::ostringstream oss;
   storage_manager.print(oss);
-  EXPECT_EQ(
-      oss.str(),
-      "=== second_table ===\nn columns: 0\nn rows: 0\nn chunks: 1\ncolumns:\n"
-      "=== first_table ===\nn columns: 1\nn rows: 0\nn chunks: 1\ncolumns:\n  first_column (string)\n"
-  );
+  EXPECT_EQ(oss.str(),
+            "=== second_table ===\nn columns: 0\nn rows: 0\nn chunks: 1\ncolumns:\n"
+            "=== first_table ===\nn columns: 1\nn rows: 0\nn chunks: 1\ncolumns:\n  first_column (string)\n");
 }
 }  // namespace opossum

@@ -12,35 +12,35 @@ void Chunk::add_segment(const std::shared_ptr<AbstractSegment> segment) {
 
 void Chunk::append(const std::vector<AllTypeVariant>& values) {
   DebugAssert(values.size() == _segments.size(), "There must be the same amount of values as in the segment!");
-  for(auto i = size_t{0}; i < values.size(); ++i){
+  for (auto i = size_t{0}; i < values.size(); ++i) {
     auto segment = _segments[i];
     {
       auto segment_pointer = dynamic_cast<ValueSegment<std::string>*>(segment.get());
-      if(segment_pointer != nullptr){
+      if (segment_pointer != nullptr) {
         segment_pointer->append(values[i]);
       }
     }
     {
       auto segment_pointer = dynamic_cast<ValueSegment<int32_t>*>(segment.get());
-      if(segment_pointer != nullptr){
+      if (segment_pointer != nullptr) {
         segment_pointer->append(values[i]);
       }
     }
     {
       auto segment_pointer = dynamic_cast<ValueSegment<int64_t>*>(segment.get());
-      if(segment_pointer != nullptr){
+      if (segment_pointer != nullptr) {
         segment_pointer->append(values[i]);
       }
     }
     {
       auto segment_pointer = dynamic_cast<ValueSegment<float>*>(segment.get());
-      if(segment_pointer != nullptr){
+      if (segment_pointer != nullptr) {
         segment_pointer->append(values[i]);
       }
     }
     {
       auto segment_pointer = dynamic_cast<ValueSegment<double>*>(segment.get());
-      if(segment_pointer != nullptr){
+      if (segment_pointer != nullptr) {
         segment_pointer->append(values[i]);
       }
     }

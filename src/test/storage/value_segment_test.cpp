@@ -85,7 +85,7 @@ TEST_F(StorageValueSegmentTest, NullValueHandling) {
 TEST_F(StorageValueSegmentTest, GetValues) {
   int_value_segment.append(1);
   int_value_segment.append(2);
-  EXPECT_EQ(int_value_segment.values(), (std::vector<int>{1,2}));
+  EXPECT_EQ(int_value_segment.values(), (std::vector<int>{1, 2}));
   double_value_segment.append(0.0);
   EXPECT_EQ(double_value_segment.values(), (std::vector<double>{0.0}));
   EXPECT_EQ(string_value_segment.values(), (std::vector<std::string>{}));

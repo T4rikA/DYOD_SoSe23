@@ -46,11 +46,10 @@ void ValueSegment<T>::append(const AllTypeVariant& value) {
     _value_vector.push_back(type_cast<T>(0));
     _is_null_vector.push_back(true);
   } else {
-    try{
+    try {
       _value_vector.push_back(type_cast<T>(value));
       _is_null_vector.push_back(false);
-    }
-    catch (...) {
+    } catch (...) {
       throw std::logic_error{"Wrong argument type"};
     }
   }
