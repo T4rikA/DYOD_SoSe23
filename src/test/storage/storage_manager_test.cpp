@@ -55,8 +55,8 @@ TEST_F(StorageStorageManagerTest, PrintSimpleTables) {
   std::ostringstream oss;
   storage_manager.print(oss);
   EXPECT_EQ(oss.str(),
-            "=== second_table ===\nn columns: 0\nn rows: 0\nn chunks: 1\ncolumns:\n"
-            "=== first_table ===\nn columns: 0\nn rows: 0\nn chunks: 1\ncolumns:\n");
+            "=== second_table ===\n#columns: 0\n#rows: 0\n#chunks: 1\ncolumns:\n"
+            "=== first_table ===\n#columns: 0\n#rows: 0\n#chunks: 1\ncolumns:\n");
 }
 
 TEST_F(StorageStorageManagerTest, PrintComplexTables) {
@@ -67,7 +67,7 @@ TEST_F(StorageStorageManagerTest, PrintComplexTables) {
   std::ostringstream oss;
   storage_manager.print(oss);
   EXPECT_EQ(oss.str(),
-            "=== second_table ===\nn columns: 0\nn rows: 0\nn chunks: 1\ncolumns:\n"
-            "=== first_table ===\nn columns: 1\nn rows: 0\nn chunks: 1\ncolumns:\n  first_column (string)\n");
+            "=== second_table ===\n#columns: 0\n#rows: 0\n#chunks: 1\ncolumns:\n"
+            "=== first_table ===\n#columns: 1\n#rows: 0\n#chunks: 1\ncolumns:\n  first_column (string)\n");
 }
 }  // namespace opossum

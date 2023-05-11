@@ -10,36 +10,29 @@ StorageManager& StorageManager::get() {
 }
 
 void StorageManager::add_table(const std::string& name, std::shared_ptr<Table> table) {
+  Assert(!has_table(name), "Table with name: " + name + " already exists.");
   _tables[name] = table;
 }
 
 void StorageManager::drop_table(const std::string& name) {
-  if (_tables[name]) {
-    _tables[name] = nullptr;
-  } else {
-    throw std::logic_error("Table does not exist");
-  }
+  Assert(has_table(name), "Table with name: " + name + " doesn't exist, can't drop it.");
+  _tables.erase(name);
 }
 
 std::shared_ptr<Table> StorageManager::get_table(const std::string& name) const {
-  if (_tables.at(name)) {
-    return _tables.at(name);
-  } else {
-    throw std::logic_error("Table does not exist");
-  }
+  Assert(has_table(name), "Table with name: " + name + " doesn't exist.");
+  return _tables.at(name);
 }
 
 bool StorageManager::has_table(const std::string& name) const {
-  if (_tables.contains(name))
-    return true;
-  return false;
+  return _tables.contains(name);
 }
 
 std::vector<std::string> StorageManager::table_names() const {
   auto keys = std::vector<std::string>{};
   keys.reserve(_tables.size());
 
-  for (auto [key, _] : _tables) {
+  for (const auto& [key, _] : _tables) {
     keys.push_back(key);
   }
 
@@ -49,18 +42,19 @@ std::vector<std::string> StorageManager::table_names() const {
 void StorageManager::print(std::ostream& out) const {
   for (auto const& [table_name, table] : _tables) {
     out << "=== " << table_name << " ===" << std::endl;
-    out << "n columns: " << table->column_count() << std::endl;
-    out << "n rows: " << table->row_count() << std::endl;
-    out << "n chunks: " << table->chunk_count() << std::endl;
+    out << "#columns: " << table->column_count() << std::endl;
+    out << "#rows: " << table->row_count() << std::endl;
+    out << "#chunks: " << table->chunk_count() << std::endl;
     out << "columns:" << std::endl;
-    for (auto column_id = ColumnID{0}; column_id < table->column_count(); column_id++) {
+    const auto column_count = table->column_count();
+    for (auto column_id = ColumnID{0}; column_id < column_count; column_id++) {
       out << "  " << table->column_name(column_id) << " (" << table->column_type(column_id) << ")" << std::endl;
     }
   }
 }
 
 void StorageManager::reset() {
-  _tables = std::unordered_map<std::string, std::shared_ptr<Table>>();
+  _tables.clear();
 }
 
 }  // namespace opossum

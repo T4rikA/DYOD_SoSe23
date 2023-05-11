@@ -1,6 +1,7 @@
 #include "chunk.hpp"
 
 #include "abstract_segment.hpp"
+#include "resolve_type.hpp"
 #include "utils/assert.hpp"
 #include "value_segment.hpp"
 
@@ -11,44 +12,29 @@ void Chunk::add_segment(const std::shared_ptr<AbstractSegment> segment) {
 }
 
 void Chunk::append(const std::vector<AllTypeVariant>& values) {
-  DebugAssert(values.size() == _segments.size(), "There must be the same amount of values as in the segment!");
-  for (auto i = size_t{0}; i < values.size(); ++i) {
-    auto segment = _segments[i];
-    {
-      auto segment_pointer = dynamic_cast<ValueSegment<std::string>*>(segment.get());
-      if (segment_pointer != nullptr) {
-        segment_pointer->append(values[i]);
+  static const auto data_types = std::vector<std::string>{"int", "long", "float", "double", "string"};
+  const auto column_count = _segments.size();
+  Assert(values.size() == column_count, "Number of segments does not match value list.");
+
+  for (auto column_id = ColumnID{0}; column_id < column_count; ++column_id) {
+    auto success = false;
+    for (const auto& data_type : data_types) {
+      if (success) {
+        break;
       }
-    }
-    {
-      auto segment_pointer = dynamic_cast<ValueSegment<int32_t>*>(segment.get());
-      if (segment_pointer != nullptr) {
-        segment_pointer->append(values[i]);
-      }
-    }
-    {
-      auto segment_pointer = dynamic_cast<ValueSegment<int64_t>*>(segment.get());
-      if (segment_pointer != nullptr) {
-        segment_pointer->append(values[i]);
-      }
-    }
-    {
-      auto segment_pointer = dynamic_cast<ValueSegment<float>*>(segment.get());
-      if (segment_pointer != nullptr) {
-        segment_pointer->append(values[i]);
-      }
-    }
-    {
-      auto segment_pointer = dynamic_cast<ValueSegment<double>*>(segment.get());
-      if (segment_pointer != nullptr) {
-        segment_pointer->append(values[i]);
-      }
+      resolve_data_type(data_type, [&](auto type) {
+        using DataType = typename decltype(type)::type;
+        if (const auto& typed_segment = std::dynamic_pointer_cast<ValueSegment<DataType>>(_segments[column_id])) {
+          typed_segment->append(values[column_id]);
+          success = true;
+        }
+      });
     }
   }
 }
 
 std::shared_ptr<AbstractSegment> Chunk::get_segment(const ColumnID column_id) const {
-  return _segments[column_id];
+  return _segments.at(column_id);
 }
 
 ColumnCount Chunk::column_count() const {
@@ -56,10 +42,10 @@ ColumnCount Chunk::column_count() const {
 }
 
 ChunkOffset Chunk::size() const {
-  if (_segments.size()) {
-    return _segments[0]->size();
+  if (!column_count()) {
+    return 0;
   }
-  return 0;
+  return _segments[0]->size();
 }
 
 }  // namespace opossum
