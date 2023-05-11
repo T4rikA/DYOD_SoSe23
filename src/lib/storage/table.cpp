@@ -6,12 +6,8 @@
 
 namespace opossum {
 
-Table::Table(const ChunkOffset target_chunk_size) {
-  _target_chunk_size = target_chunk_size;
-  _chunks = std::vector<std::shared_ptr<Chunk>>();
-  _column_names = std::vector<std::string>();
-  _column_types = std::vector<std::string>();
-  _column_nullable = std::vector<bool>();
+Table::Table(const ChunkOffset target_chunk_size)
+    : _chunks{}, _column_names{}, _column_types{}, _column_nullable{}, _target_chunk_size(target_chunk_size) {
   create_new_chunk();
 }
 
