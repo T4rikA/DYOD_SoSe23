@@ -1,5 +1,4 @@
 #include "base_test.hpp"
-
 #include "storage/storage_manager.hpp"
 
 namespace opossum {
@@ -46,4 +45,29 @@ TEST_F(StorageStorageManagerTest, HasTable) {
   EXPECT_EQ(storage_manager.has_table("first_table"), true);
 }
 
+TEST_F(StorageStorageManagerTest, TableNames) {
+  auto& storage_manager = StorageManager::get();
+  EXPECT_EQ(storage_manager.table_names(), (std::vector<std::string>{"second_table", "first_table"}));
+}
+
+TEST_F(StorageStorageManagerTest, PrintSimpleTables) {
+  auto& storage_manager = StorageManager::get();
+  std::ostringstream oss;
+  storage_manager.print(oss);
+  EXPECT_EQ(oss.str(),
+            "=== second_table ===\n#columns: 0\n#rows: 0\n#chunks: 1\ncolumns:\n"
+            "=== first_table ===\n#columns: 0\n#rows: 0\n#chunks: 1\ncolumns:\n");
+}
+
+TEST_F(StorageStorageManagerTest, PrintComplexTables) {
+  auto& storage_manager = StorageManager::get();
+  auto table_a = storage_manager.get_table("first_table");
+  table_a->add_column("first_column", "string", false);
+
+  std::ostringstream oss;
+  storage_manager.print(oss);
+  EXPECT_EQ(oss.str(),
+            "=== second_table ===\n#columns: 0\n#rows: 0\n#chunks: 1\ncolumns:\n"
+            "=== first_table ===\n#columns: 1\n#rows: 0\n#chunks: 1\ncolumns:\n  first_column (string)\n");
+}
 }  // namespace opossum
