@@ -5,6 +5,8 @@
 #include "value_segment.hpp"
 #include "dictionary_segment.hpp"
 
+#include <thread>
+
 namespace opossum {
 
 Table::Table(const ChunkOffset target_chunk_size)
@@ -97,6 +99,16 @@ std::shared_ptr<const Chunk> Table::get_chunk(ChunkID chunk_id) const {
   return _chunks.at(chunk_id);
 }
 
+void compress_segment(const std::shared_ptr<Chunk> old_chunk, std::shared_ptr<Chunk> new_chunk, ColumnID segment_index, std::string type){
+  auto segment = old_chunk->get_segment(segment_index);
+  resolve_data_type(type, [&](const auto data_type_t) {
+    using ColumnDataType = typename decltype(data_type_t)::type;
+    const auto dictionary_segment = std::make_shared<DictionarySegment<ColumnDataType>>(segment);
+    new_chunk->add_segment_at_index(dictionary_segment, segment_index);
+  });
+}
+
+
 // GCOVR_EXCL_START
 void Table::compress_chunk(const ChunkID chunk_id) {
   // Implementation goes here
@@ -107,7 +119,22 @@ void Table::compress_chunk(const ChunkID chunk_id) {
   auto new_chunk = std::make_shared<Chunk>();
   auto old_chunk = get_chunk(chunk_id);
   auto segment_count = old_chunk->column_count();
+
+  auto threads = std::vector<std::thread>();
+
   for (auto segment_index = ColumnID{}; segment_index < segment_count; ++segment_index) {
+    // create thread
+    auto type = this->column_type(segment_index);
+    auto worker = std::thread(compress_segment, old_chunk, new_chunk, segment_index, type);
+    threads.push_back(std::move(worker));
+  }
+
+  //threads join
+  for (size_t thread_index = 0; thread_index < segment_count; ++thread_index) {
+    threads[thread_index].join();
+  }
+
+/*  for (auto segment_index = ColumnID{}; segment_index < segment_count; ++segment_index) {
     auto segment = old_chunk->get_segment(segment_index);
     const auto& type = this->column_type(segment_index);
     resolve_data_type(type, [&](const auto data_type_t) {
@@ -115,7 +142,7 @@ void Table::compress_chunk(const ChunkID chunk_id) {
       const auto dictionary_segment = std::make_shared<DictionarySegment<ColumnDataType>>(segment);
       new_chunk->add_segment(dictionary_segment);
     });
-  }
+  }*/
   _chunks[chunk_id] = new_chunk;
 }
 

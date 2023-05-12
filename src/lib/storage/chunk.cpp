@@ -11,6 +11,11 @@ void Chunk::add_segment(const std::shared_ptr<AbstractSegment> segment) {
   _segments.push_back(segment);
 }
 
+void Chunk::add_segment_at_index(const std::shared_ptr<AbstractSegment> segment, ColumnID index) {
+  Assert(index < column_count(), "Index too big.");
+  _segments[index] = segment;
+}
+
 void Chunk::append(const std::vector<AllTypeVariant>& values) {
   static const auto data_types = std::vector<std::string>{"int", "long", "float", "double", "string"};
   const auto column_count = _segments.size();
