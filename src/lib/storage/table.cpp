@@ -3,6 +3,7 @@
 #include "resolve_type.hpp"
 #include "utils/assert.hpp"
 #include "value_segment.hpp"
+#include "dictionary_segment.hpp"
 
 namespace opossum {
 
@@ -103,7 +104,19 @@ void Table::compress_chunk(const ChunkID chunk_id) {
    * chunk, and in the end, put the new segments into place by exchanging the complete chunk. Keep in mind that database
    * systems are usually accessed by multiple users simultaneously. Others might access a chunk while you are
    * compressing it. Therefore, exchanging uncompressed and compressed chunks should consider concurrent accesses. */
-  Fail("Implementation is missing.");
+  auto new_chunk = std::make_shared<Chunk>();
+  auto old_chunk = get_chunk(chunk_id);
+  auto segment_count = old_chunk->column_count();
+  for (auto segment_index = ColumnID{}; segment_index < segment_count; ++segment_index) {
+    auto segment = old_chunk->get_segment(segment_index);
+    const auto& type = this->column_type(segment_index);
+    resolve_data_type(type, [&](const auto data_type_t) {
+      using ColumnDataType = typename decltype(data_type_t)::type;
+      const auto dictionary_segment = std::make_shared<DictionarySegment<ColumnDataType>>(segment);
+      new_chunk->add_segment(dictionary_segment);
+    });
+  }
+  _chunks[chunk_id] = new_chunk;
 }
 
 // GCOVR_EXCL_STOP
