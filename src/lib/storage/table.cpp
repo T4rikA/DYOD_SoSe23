@@ -99,6 +99,10 @@ std::shared_ptr<const Chunk> Table::get_chunk(ChunkID chunk_id) const {
 // GCOVR_EXCL_START
 void Table::compress_chunk(const ChunkID chunk_id) {
   // Implementation goes here
+  /* You should create a new empty chunk before starting the compression, add the new dictionary-encoded segments to the
+   * chunk, and in the end, put the new segments into place by exchanging the complete chunk. Keep in mind that database
+   * systems are usually accessed by multiple users simultaneously. Others might access a chunk while you are
+   * compressing it. Therefore, exchanging uncompressed and compressed chunks should consider concurrent accesses. */
   Fail("Implementation is missing.");
 }
 
