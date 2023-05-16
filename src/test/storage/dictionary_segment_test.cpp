@@ -38,7 +38,7 @@ TEST_F(StorageDictionarySegmentTest, CompressSegmentString) {
   EXPECT_EQ(dict[3], "Steve");
 
   // Test NULL value handling.
-  EXPECT_EQ(dict_segment->attribute_vector()->at(6), dict_segment->null_value_id());
+  EXPECT_EQ(dict_segment->attribute_vector()->get(6), dict_segment->null_value_id());
   EXPECT_EQ(dict_segment->get_typed_value(6), std::nullopt);
   EXPECT_THROW(dict_segment->get(6), std::logic_error);
 }

@@ -2,11 +2,23 @@
 
 #include <map>
 #include <set>
+#include "fixed_width_integer_vector.hpp"
 #include "type_cast.hpp"
 #include "utils/assert.hpp"
 #include "value_segment.hpp"
 
 namespace opossum {
+
+std::shared_ptr<AbstractAttributeVector> get_attribute_vector(size_t bits_needed, size_t size) {
+  Assert(bits_needed <= 32, "Too many values in dictionary, cant use more than 32 bits!");
+  if (bits_needed <= 8) {
+    return std::make_shared<FixedWidthIntegerVector<uint8_t>>(size);
+  } else if (bits_needed <= 16) {
+    return std::make_shared<FixedWidthIntegerVector<uint16_t>>(size);
+  } else {
+    return std::make_shared<FixedWidthIntegerVector<uint32_t>>(size);
+  }
+}
 
 template <typename T>
 DictionarySegment<T>::DictionarySegment(const std::shared_ptr<AbstractSegment>& abstract_segment) {
@@ -35,15 +47,16 @@ DictionarySegment<T>::DictionarySegment(const std::shared_ptr<AbstractSegment>& 
     _dictionary.push_back(value);
   }
 
-  auto attribute_vector = std::make_shared<std::vector<uint32_t>>();
-  attribute_vector->reserve(value_segment_size);
+  auto bits_needed = std::bit_width(unique_values.size() - 1);
+
+  const auto attribute_vector = get_attribute_vector(bits_needed, value_segment_size);
 
   for (auto index = size_t{0}; index < value_segment_size; ++index) {
     if (value_segment->is_null(index)) {
-      attribute_vector->push_back(null_value_id());
+      attribute_vector->set(index, null_value_id());
     } else {
       auto dict_value = unique_values[values[index]];
-      attribute_vector->push_back(dict_value);
+      attribute_vector->set(index, dict_value);
     }
   }
   _attribute_vector = attribute_vector;
@@ -68,7 +81,7 @@ T DictionarySegment<T>::get(const ChunkOffset chunk_offset) const {
 
 template <typename T>
 std::optional<T> DictionarySegment<T>::get_typed_value(const ChunkOffset chunk_offset) const {
-  const auto value_id = static_cast<ValueID>(attribute_vector()->at(chunk_offset));
+  const auto value_id = static_cast<ValueID>(attribute_vector()->get(chunk_offset));
   if (value_id == null_value_id()) {
     return std::nullopt;
   }
@@ -81,7 +94,7 @@ const std::vector<T>& DictionarySegment<T>::dictionary() const {
 }
 
 template <typename T>
-std::shared_ptr<const std::vector<uint32_t>> DictionarySegment<T>::attribute_vector() const {
+std::shared_ptr<AbstractAttributeVector> DictionarySegment<T>::attribute_vector() const {
   return _attribute_vector;
 }
 

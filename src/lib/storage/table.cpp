@@ -5,8 +5,6 @@
 #include "utils/assert.hpp"
 #include "value_segment.hpp"
 
-#include <thread>
-
 namespace opossum {
 
 Table::Table(const ChunkOffset target_chunk_size)
