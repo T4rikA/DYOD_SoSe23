@@ -120,7 +120,7 @@ void Table::compress_chunk(const ChunkID chunk_id) {
   auto old_chunk = get_chunk(chunk_id);
   auto segment_count = old_chunk->column_count();
 
-  auto threads = std::vector<std::thread>();
+  /* auto threads = std::vector<std::thread>();
 
   for (auto segment_index = ColumnID{}; segment_index < segment_count; ++segment_index) {
     // create thread
@@ -132,9 +132,9 @@ void Table::compress_chunk(const ChunkID chunk_id) {
   //threads join
   for (size_t thread_index = 0; thread_index < segment_count; ++thread_index) {
     threads[thread_index].join();
-  }
+  } */
 
-/*  for (auto segment_index = ColumnID{}; segment_index < segment_count; ++segment_index) {
+for (auto segment_index = ColumnID{}; segment_index < segment_count; ++segment_index) {
     auto segment = old_chunk->get_segment(segment_index);
     const auto& type = this->column_type(segment_index);
     resolve_data_type(type, [&](const auto data_type_t) {
@@ -142,7 +142,7 @@ void Table::compress_chunk(const ChunkID chunk_id) {
       const auto dictionary_segment = std::make_shared<DictionarySegment<ColumnDataType>>(segment);
       new_chunk->add_segment(dictionary_segment);
     });
-  }*/
+  }
   _chunks[chunk_id] = new_chunk;
 }
 
