@@ -1,7 +1,7 @@
 #include "dictionary_segment.hpp"
 
 #include <set>
-#include <unordered_map>
+#include <map>
 #include "type_cast.hpp"
 #include "utils/assert.hpp"
 #include "value_segment.hpp"
@@ -12,22 +12,18 @@ template <typename T>
 DictionarySegment<T>::DictionarySegment(const std::shared_ptr<AbstractSegment>& abstract_segment) {
   // retrieve value segment
   const auto value_segment = std::dynamic_pointer_cast<ValueSegment<T>>(abstract_segment);
-  Assert(value_segment, "Cant encode abstract segment, because it is no value segment.");
+  Assert(value_segment, "Can't encode abstract segment, because it is no value segment.");
 
   auto values = value_segment->values();
   auto value_segment_size = value_segment->size();
 
   // stores value -> id
-  auto unique_values = std::unordered_map<T, ValueID>();
+  auto unique_values = std::map<T, ValueID>();
 
-  //TODO this is dependent on null_value_id() being 0
-  auto last_index = 1;
+  auto last_index = 0;
   for (auto index = size_t{0}; index < value_segment_size; ++index) {
-    //TODO do we have to check if the segment is nullable?
-    auto value = values[index];
-    if (value_segment->is_null(index)) {
-      unique_values[value] = null_value_id();
-    } else {
+    if (!value_segment->is_null(index)) {
+      auto value = values[index];
       if (unique_values.find(value) == unique_values.end()) {
         unique_values[value] = last_index;
         ++last_index;
@@ -39,12 +35,17 @@ DictionarySegment<T>::DictionarySegment(const std::shared_ptr<AbstractSegment>& 
     _dictionary.push_back(value);
   }
 
-  auto attribute_vector = std::make_shared<std::vector<uint32_t>>(value_segment_size);
-  for (auto value : values) {
-    auto dict_value = unique_values[value];
-    attribute_vector->push_back(dict_value);
-  }
+  auto attribute_vector = std::make_shared<std::vector<uint32_t>>();
+  attribute_vector->reserve(value_segment_size);
 
+  for (auto index = size_t{0}; index < value_segment_size; ++index) {
+    if (value_segment->is_null(index)) {
+      attribute_vector->push_back(null_value_id());
+    }else{
+      auto dict_value = unique_values[values[index]];
+      attribute_vector->push_back(dict_value);
+    }
+  }
   _attribute_vector = attribute_vector;
 
   //moved this out since once adjust the intsize to the number of values we deal with we cannot construct the compressed_values vector before knowing the amount of unique value
@@ -114,13 +115,13 @@ std::shared_ptr<const std::vector<uint32_t>> DictionarySegment<T>::attribute_vec
 
 template <typename T>
 ValueID DictionarySegment<T>::null_value_id() const {
-  return static_cast<ValueID>(0);
+  return static_cast<ValueID>(-1);
 }
 
 template <typename T>
 const T DictionarySegment<T>::value_of_value_id(const ValueID value_id) const {
   Assert(value_id != null_value_id(), "Can't retrieve value for null value.");
-  return dictionary().at(value_id - 1);
+  return dictionary().at(value_id);
 }
 
 template <typename T>
@@ -154,12 +155,12 @@ ChunkOffset DictionarySegment<T>::unique_values_count() const {
 
 template <typename T>
 ChunkOffset DictionarySegment<T>::size() const {
-  return static_cast<ChunkOffset>(_attribute_vector->size());
+  return static_cast<ChunkOffset>(attribute_vector()->size());
 }
 
 template <typename T>
 size_t DictionarySegment<T>::estimate_memory_usage() const {
-  return size_t{dictionary().size() * sizeof(uint32_t) /*+ _attribute_vector.size() * sizeof (T)*/};
+  return size_t{dictionary().size() * sizeof(uint32_t) /*+ attribute_vector().size() * sizeof (T)*/};
 }
 
 EXPLICITLY_INSTANTIATE_DATA_TYPES(DictionarySegment);
