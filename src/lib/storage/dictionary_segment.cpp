@@ -24,7 +24,7 @@ DictionarySegment<T>::DictionarySegment(const std::shared_ptr<AbstractSegment>& 
   // build dictionary using unique values and collect indices for values in hashmap of value->index
   auto value_positions = std::unordered_map<T, uint32_t>();
   auto unique_values_index = uint32_t{0};
-  for (const auto value : unique_values) {
+  for (auto value : unique_values) {
     // TODO maybe use unique value count to resize vector and place at index instead of push back?
     _dictionary.push_back(type_cast<T>(value));
     value_positions[ type_cast<T>(value)] = unique_values_index;
@@ -41,8 +41,7 @@ DictionarySegment<T>::DictionarySegment(const std::shared_ptr<AbstractSegment>& 
 
 template <typename T>
 AllTypeVariant DictionarySegment<T>::operator[](const ChunkOffset chunk_offset) const {
-  // Implementation goes here
-  Fail("Implementation is missing.");
+  return _dictionary[_attribute_vector->at(chunk_offset)];
 }
 
 template <typename T>
@@ -52,8 +51,10 @@ T DictionarySegment<T>::get(const ChunkOffset chunk_offset) const {
 
 template <typename T>
 std::optional<T> DictionarySegment<T>::get_typed_value(const ChunkOffset chunk_offset) const {
-  // Implementation goes here
-  Fail("Implementation is missing.");
+  if (_attribute_vector->at(chunk_offset) == null_value_id()) {
+    return std::nullopt;
+  }
+  return _dictionary[_attribute_vector->at(chunk_offset)];
 }
 
 template <typename T>
@@ -68,8 +69,7 @@ std::shared_ptr<const std::vector<uint32_t>> DictionarySegment<T>::attribute_vec
 
 template <typename T>
 ValueID DictionarySegment<T>::null_value_id() const {
-  // Implementation goes here
-  Fail("Implementation is missing.");
+  return static_cast<ValueID>(-1);
 }
 
 template <typename T>
