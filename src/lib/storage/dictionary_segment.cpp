@@ -17,26 +17,38 @@ DictionarySegment<T>::DictionarySegment(const std::shared_ptr<AbstractSegment>& 
   auto values = value_segment->values();
   auto value_segment_size = value_segment->size();
 
+  // stores value -> id
   auto unique_values = std::unordered_map<T, ValueID>();
-  // do for different sizes
 
   //TODO this is dependent on null_value_id() being 0
   auto last_index = 1;
   for (auto index = size_t{0}; index < value_segment_size; ++index) {
+    //TODO do we have to check if the segment is nullable?
+    auto value = values[index];
     if (value_segment->is_null(index)) {
-      unique_values[values[index]] = null_value_id();
+      unique_values[value] = null_value_id();
     } else {
-      if (unique_values.find(values[index]) != unique_values.end()) {
-        unique_values[values[index]] = last_index;
+      if (unique_values.find(value) == unique_values.end()) {
+        unique_values[value] = last_index;
         ++last_index;
       }
     }
   }
-  
-  //for (auto value : unique_values) {}
+
+  for (auto [value, key] : unique_values) {
+    _dictionary.push_back(value);
+  }
+
+  auto attribute_vector = std::make_shared<std::vector<uint32_t>>(value_segment_size);
+  for (auto value : values) {
+    auto dict_value = unique_values[value];
+    attribute_vector->push_back(dict_value);
+  }
+
+  _attribute_vector = attribute_vector;
 
   //moved this out since once adjust the intsize to the number of values we deal with we cannot construct the compressed_values vector before knowing the amount of unique value
-  auto compressed_values = std::vector<uint32_t>(value_segment_size);
+  // auto compressed_values = std::vector<uint32_t>(value_segment_size);
 
   /*
   // determine unique values for dictionary
@@ -68,7 +80,7 @@ DictionarySegment<T>::DictionarySegment(const std::shared_ptr<AbstractSegment>& 
 template <typename T>
 AllTypeVariant DictionarySegment<T>::operator[](const ChunkOffset chunk_offset) const {
   auto return_value = get_typed_value(chunk_offset);
-  if(return_value){
+  if (return_value) {
     return *return_value;
   }
   return NULL_VALUE;
@@ -108,7 +120,7 @@ ValueID DictionarySegment<T>::null_value_id() const {
 template <typename T>
 const T DictionarySegment<T>::value_of_value_id(const ValueID value_id) const {
   Assert(value_id != null_value_id(), "Can't retrieve value for null value.");
-  return dictionary().at(value_id-1);
+  return dictionary().at(value_id - 1);
 }
 
 template <typename T>
