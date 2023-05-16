@@ -1,7 +1,7 @@
 #include "dictionary_segment.hpp"
 
-#include <set>
 #include <map>
+#include <set>
 #include "type_cast.hpp"
 #include "utils/assert.hpp"
 #include "value_segment.hpp"
@@ -20,7 +20,7 @@ DictionarySegment<T>::DictionarySegment(const std::shared_ptr<AbstractSegment>& 
   // stores value -> id
   auto unique_values = std::map<T, ValueID>();
 
-  auto last_index = 0;
+  auto last_index = value_segment->is_nullable() ? 1 : 0;
   for (auto index = size_t{0}; index < value_segment_size; ++index) {
     if (!value_segment->is_null(index)) {
       auto value = values[index];
@@ -41,40 +41,12 @@ DictionarySegment<T>::DictionarySegment(const std::shared_ptr<AbstractSegment>& 
   for (auto index = size_t{0}; index < value_segment_size; ++index) {
     if (value_segment->is_null(index)) {
       attribute_vector->push_back(null_value_id());
-    }else{
+    } else {
       auto dict_value = unique_values[values[index]];
       attribute_vector->push_back(dict_value);
     }
   }
   _attribute_vector = attribute_vector;
-
-  //moved this out since once adjust the intsize to the number of values we deal with we cannot construct the compressed_values vector before knowing the amount of unique value
-  // auto compressed_values = std::vector<uint32_t>(value_segment_size);
-
-  /*
-  // determine unique values for dictionary
-  _attribute_vector = std::make_shared<std::vector<uint32_t>>();
-  std::set<T> unique_values = std::set<T>();
-  auto segment_size = abstract_segment->size();
-  for (auto value_index = size_t{0}; value_index < segment_size; ++value_index) {
-    unique_values.insert(type_cast<T>((*abstract_segment)[value_index]));
-  }
-  // build dictionary using unique values and collect indices for values in hashmap of value->index
-  auto value_positions = std::unordered_map<T, ValueID>();
-  // we use unique value id 0 for null values
-  auto unique_values_index = uint32_t{1};
-  for (auto value : unique_values) {
-    // TODO maybe use unique value count to resize vector and place at index instead of push back?
-    _dictionary.push_back(type_cast<T>(value));
-    value_positions[type_cast<T>(value)] = unique_values_index;
-    unique_values_index++;
-  }
-  // apply dict enconding
-  for (auto attribute_index = size_t{0}; attribute_index < segment_size; ++attribute_index) {
-    auto value = type_cast<T>((*abstract_segment)[attribute_index]);
-    auto dict_value = value_positions.at(type_cast<T>(value));
-    _attribute_vector->push_back(dict_value);
-  }*/
   return;
 }
 
@@ -115,7 +87,7 @@ std::shared_ptr<const std::vector<uint32_t>> DictionarySegment<T>::attribute_vec
 
 template <typename T>
 ValueID DictionarySegment<T>::null_value_id() const {
-  return static_cast<ValueID>(-1);
+  return static_cast<ValueID>(0);
 }
 
 template <typename T>
