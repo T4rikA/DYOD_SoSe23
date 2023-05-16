@@ -1,9 +1,9 @@
 #include "table.hpp"
 
+#include "dictionary_segment.hpp"
 #include "resolve_type.hpp"
 #include "utils/assert.hpp"
 #include "value_segment.hpp"
-#include "dictionary_segment.hpp"
 
 #include <thread>
 
@@ -99,7 +99,8 @@ std::shared_ptr<const Chunk> Table::get_chunk(ChunkID chunk_id) const {
   return _chunks.at(chunk_id);
 }
 
-void compress_segment(const std::shared_ptr<Chunk> old_chunk, std::shared_ptr<Chunk> new_chunk, ColumnID segment_index, std::string type){
+void compress_segment(const std::shared_ptr<Chunk> old_chunk, std::shared_ptr<Chunk> new_chunk, ColumnID segment_index,
+                      std::string type) {
   auto segment = old_chunk->get_segment(segment_index);
   resolve_data_type(type, [&](const auto data_type_t) {
     using ColumnDataType = typename decltype(data_type_t)::type;
@@ -107,7 +108,6 @@ void compress_segment(const std::shared_ptr<Chunk> old_chunk, std::shared_ptr<Ch
     new_chunk->add_segment_at_index(dictionary_segment, segment_index);
   });
 }
-
 
 // GCOVR_EXCL_START
 void Table::compress_chunk(const ChunkID chunk_id) {
@@ -134,7 +134,7 @@ void Table::compress_chunk(const ChunkID chunk_id) {
     threads[thread_index].join();
   } */
 
-for (auto segment_index = ColumnID{}; segment_index < segment_count; ++segment_index) {
+  for (auto segment_index = ColumnID{}; segment_index < segment_count; ++segment_index) {
     auto segment = old_chunk->get_segment(segment_index);
     const auto& type = this->column_type(segment_index);
     resolve_data_type(type, [&](const auto data_type_t) {
