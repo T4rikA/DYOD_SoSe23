@@ -1,11 +1,11 @@
 #include "table.hpp"
 
+#include <thread>
+
 #include "dictionary_segment.hpp"
 #include "resolve_type.hpp"
 #include "utils/assert.hpp"
 #include "value_segment.hpp"
-
-#include <thread>
 
 namespace opossum {
 
