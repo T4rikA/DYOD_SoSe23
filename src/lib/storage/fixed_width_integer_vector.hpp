@@ -5,7 +5,7 @@
 
 namespace opossum {
 
-template <typename T>
+template <typename uintX_t>
 class FixedWidthIntegerVector : public AbstractAttributeVector {
  public:
   explicit FixedWidthIntegerVector(size_t size);
@@ -23,7 +23,7 @@ class FixedWidthIntegerVector : public AbstractAttributeVector {
   AttributeVectorWidth width() const override;
 
  private:
-  std::vector<T> _values;
+  std::vector<uintX_t> _values;
 };
 
 extern template class FixedWidthIntegerVector<uint8_t>;
