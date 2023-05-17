@@ -102,7 +102,7 @@ ValueID DictionarySegment<T>::lower_bound(const T value) const {
   if (lower_bound_iterator == dictionary().end()) {
     return INVALID_VALUE_ID;
   }
-  return ValueID{(u_int32_t)std::distance(dictionary().begin(), lower_bound_iterator)};
+  return static_cast<ValueID>(std::distance(dictionary().begin(), lower_bound_iterator));
 }
 
 template <typename T>
@@ -116,7 +116,7 @@ ValueID DictionarySegment<T>::upper_bound(const T value) const {
   if (upper_bound_iterator == dictionary().end()) {
     return INVALID_VALUE_ID;
   }
-  return ValueID{(u_int32_t)std::distance(dictionary().begin(), upper_bound_iterator)};
+  return static_cast<ValueID>(std::distance(dictionary().begin(), upper_bound_iterator));
 }
 
 template <typename T>
