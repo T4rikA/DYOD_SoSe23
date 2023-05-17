@@ -44,10 +44,11 @@ void Table::create_new_chunk() {
     new_chunk->add_segment(new_segment);
   }
   _chunks.emplace_back(new_chunk);
+  _last_chunk_encoded = false;
 }
 
 void Table::append(const std::vector<AllTypeVariant>& values) {
-  if (_chunks.back()->size() >= _target_chunk_size) {
+  if (_chunks.back()->size() >= _target_chunk_size || _last_chunk_encoded) {
     create_new_chunk();
   }
   _chunks.back()->append(values);
@@ -58,7 +59,7 @@ ColumnCount Table::column_count() const {
 }
 
 uint64_t Table::row_count() const {
-  return ((_chunks.size() - 1) * _target_chunk_size) + _chunks.back()->size();
+  return (chunk_count() - 1) * _chunks.front()->size() + _chunks.back()->size();
 }
 
 ChunkID Table::chunk_count() const {
@@ -99,53 +100,42 @@ std::shared_ptr<const Chunk> Table::get_chunk(ChunkID chunk_id) const {
   return _chunks.at(chunk_id);
 }
 
-void compress_segment(const std::shared_ptr<Chunk> old_chunk, std::shared_ptr<Chunk> new_chunk, ColumnID segment_index,
+void compress_segment(const std::shared_ptr<AbstractSegment> segment,
+                      std::vector<std::shared_ptr<AbstractSegment>>& compressed_segments, ColumnID segment_index,
                       std::string type) {
-  auto segment = old_chunk->get_segment(segment_index);
   resolve_data_type(type, [&](const auto data_type_t) {
     using ColumnDataType = typename decltype(data_type_t)::type;
-    const auto dictionary_segment = std::make_shared<DictionarySegment<ColumnDataType>>(segment);
-    new_chunk->add_segment_at_index(dictionary_segment, segment_index);
+    auto compressed_segment = std::make_shared<DictionarySegment<ColumnDataType>>(segment);
+    compressed_segments[segment_index] = compressed_segment;
   });
 }
 
-// GCOVR_EXCL_START
 void Table::compress_chunk(const ChunkID chunk_id) {
-  // Implementation goes here
-  /* You should create a new empty chunk before starting the compression, add the new dictionary-encoded segments to the
-   * chunk, and in the end, put the new segments into place by exchanging the complete chunk. Keep in mind that database
-   * systems are usually accessed by multiple users simultaneously. Others might access a chunk while you are
-   * compressing it. Therefore, exchanging uncompressed and compressed chunks should consider concurrent accesses. */
-  auto new_chunk = std::make_shared<Chunk>();
   auto old_chunk = get_chunk(chunk_id);
   auto segment_count = old_chunk->column_count();
+  auto new_chunk = std::make_shared<Chunk>();
+  auto compressed_segments = std::vector<std::shared_ptr<AbstractSegment>>(segment_count);
 
-  /* auto threads = std::vector<std::thread>();
-
+  auto threads = std::vector<std::thread>();
   for (auto segment_index = ColumnID{}; segment_index < segment_count; ++segment_index) {
-    // create thread
     auto type = this->column_type(segment_index);
-    auto worker = std::thread(compress_segment, old_chunk, new_chunk, segment_index, type);
+    auto old_segment = old_chunk->get_segment(segment_index);
+    auto worker = std::thread(compress_segment, old_segment, std::ref(compressed_segments), segment_index, type);
     threads.push_back(std::move(worker));
   }
-
-  //threads join
-  for (size_t thread_index = 0; thread_index < segment_count; ++thread_index) {
+  // threads join
+  for (auto thread_index = size_t{0}; thread_index < segment_count; ++thread_index) {
     threads[thread_index].join();
-  } */
+  }
 
   for (auto segment_index = ColumnID{}; segment_index < segment_count; ++segment_index) {
-    auto segment = old_chunk->get_segment(segment_index);
-    const auto& type = this->column_type(segment_index);
-    resolve_data_type(type, [&](const auto data_type_t) {
-      using ColumnDataType = typename decltype(data_type_t)::type;
-      const auto dictionary_segment = std::make_shared<DictionarySegment<ColumnDataType>>(segment);
-      new_chunk->add_segment(dictionary_segment);
-    });
+    new_chunk->add_segment(compressed_segments[segment_index]);
   }
-  _chunks[chunk_id] = new_chunk;
-}
 
-// GCOVR_EXCL_STOP
+  _chunks[chunk_id] = new_chunk;
+  if (chunk_id == chunk_count() - 1) {
+    _last_chunk_encoded = true;
+  }
+}
 
 }  // namespace opossum
