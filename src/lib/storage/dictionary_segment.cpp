@@ -48,7 +48,6 @@ DictionarySegment<T>::DictionarySegment(const std::shared_ptr<AbstractSegment>& 
     _dictionary.push_back(value);
   }
 
-
   const auto attribute_vector = get_attribute_vector(unique_values.size(), value_segment_size);
 
   for (auto index = size_t{0}; index < value_segment_size; ++index) {
