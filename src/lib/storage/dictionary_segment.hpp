@@ -28,7 +28,7 @@ class DictionarySegment : public AbstractSegment {
   const std::vector<T>& dictionary() const;
 
   // Returns an underlying data structure.
-  std::shared_ptr<const std::vector<uint32_t>> attribute_vector() const;
+  std::shared_ptr<AbstractAttributeVector> attribute_vector() const;
 
   // Returns the ValueID used to represent a NULL value.
   ValueID null_value_id() const;
@@ -61,7 +61,7 @@ class DictionarySegment : public AbstractSegment {
 
  protected:
   std::vector<T> _dictionary;
-  std::shared_ptr<std::vector<uint32_t>> _attribute_vector{};
+  std::shared_ptr<AbstractAttributeVector> _attribute_vector;
 };
 
 EXPLICITLY_DECLARE_DATA_TYPES(DictionarySegment);
