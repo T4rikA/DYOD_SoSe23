@@ -1,5 +1,7 @@
 #include "table.hpp"
 
+#include <thread>
+
 #include "dictionary_segment.hpp"
 #include "resolve_type.hpp"
 #include "utils/assert.hpp"
