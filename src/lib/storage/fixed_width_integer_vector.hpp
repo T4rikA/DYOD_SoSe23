@@ -1,7 +1,7 @@
 #pragma once
 
-#include "types.hpp"
 #include "abstract_attribute_vector.hpp"
+#include "types.hpp"
 
 namespace opossum {
 
