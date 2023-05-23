@@ -10,7 +10,7 @@
 namespace opossum {
 
 std::shared_ptr<AbstractAttributeVector> get_attribute_vector(size_t vector_size, size_t size) {
-  auto bits_needed = std::bit_width(vector_size - 1);
+  const auto bits_needed = std::bit_width(vector_size - 1);
   Assert(bits_needed <= 32, "Too many values in dictionary, cant use more than 32 bits!");
   if (bits_needed <= 8) {
     return std::make_shared<FixedWidthIntegerVector<uint8_t>>(size);
@@ -27,8 +27,8 @@ DictionarySegment<T>::DictionarySegment(const std::shared_ptr<AbstractSegment>& 
   const auto value_segment = std::dynamic_pointer_cast<ValueSegment<T>>(abstract_segment);
   Assert(value_segment, "Can't encode abstract segment, because it is no value segment.");
 
-  auto values = value_segment->values();
-  auto value_segment_size = value_segment->size();
+  const auto values = value_segment->values();
+  const auto value_segment_size = value_segment->size();
   _segment_nullable = value_segment->is_nullable();
 
   // stores value -> id
@@ -37,9 +37,9 @@ DictionarySegment<T>::DictionarySegment(const std::shared_ptr<AbstractSegment>& 
   auto last_index = _segment_nullable ? 1 : 0;
   for (auto index = size_t{0}; index < value_segment_size; ++index) {
     if (!value_segment->is_null(index)) {
-      auto value = values[index];
-      if (unique_values.find(value) == unique_values.end()) {
-        unique_values[value] = last_index;
+      const auto value = values[index];
+      const auto inserted = unique_values.insert(std::pair(value, last_index));
+      if (inserted.second) {
         ++last_index;
       }
     }
@@ -55,7 +55,7 @@ DictionarySegment<T>::DictionarySegment(const std::shared_ptr<AbstractSegment>& 
     if (value_segment->is_null(index)) {
       attribute_vector->set(index, null_value_id());
     } else {
-      auto dict_value = unique_values[values[index]];
+      const auto dict_value = unique_values[values[index]];
       attribute_vector->set(index, dict_value);
     }
   }
@@ -65,7 +65,7 @@ DictionarySegment<T>::DictionarySegment(const std::shared_ptr<AbstractSegment>& 
 
 template <typename T>
 AllTypeVariant DictionarySegment<T>::operator[](const ChunkOffset chunk_offset) const {
-  auto return_value = get_typed_value(chunk_offset);
+  const auto return_value = get_typed_value(chunk_offset);
   if (return_value) {
     return *return_value;
   }
@@ -94,7 +94,7 @@ const std::vector<T>& DictionarySegment<T>::dictionary() const {
 }
 
 template <typename T>
-std::shared_ptr<AbstractAttributeVector> DictionarySegment<T>::attribute_vector() const {
+std::shared_ptr<const AbstractAttributeVector> DictionarySegment<T>::attribute_vector() const {
   return _attribute_vector;
 }
 

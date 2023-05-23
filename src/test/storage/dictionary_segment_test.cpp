@@ -101,8 +101,8 @@ TEST_F(StorageDictionarySegmentTest, ValueOfValueID) {
 
 TEST_F(StorageDictionarySegmentTest, MemoryUsageString) {
   value_segment_str->append("Hello");
-  auto column_str = std::make_shared<DictionarySegment<std::string>>(value_segment_str);
-  auto dict_col_str = std::dynamic_pointer_cast<opossum::DictionarySegment<std::string>>(column_str);
+  const auto column_str = std::make_shared<DictionarySegment<std::string>>(value_segment_str);
+  const auto dict_col_str = std::dynamic_pointer_cast<opossum::DictionarySegment<std::string>>(column_str);
 
   EXPECT_EQ(dict_col_str->estimate_memory_usage(), 1 * sizeof(std::string) + 1 * sizeof(uint8_t));
 }
@@ -111,8 +111,8 @@ TEST_F(StorageDictionarySegmentTest, MemoryUsageUInt8) {
   for (auto index = int8_t{0}; index < 100; ++index) {
     value_segment_int->append(index);
   }
-  auto column = std::make_shared<DictionarySegment<int32_t>>(value_segment_int);
-  auto dict_col = std::dynamic_pointer_cast<opossum::DictionarySegment<int32_t>>(column);
+  const auto column = std::make_shared<DictionarySegment<int32_t>>(value_segment_int);
+  const auto dict_col = std::dynamic_pointer_cast<opossum::DictionarySegment<int32_t>>(column);
 
   EXPECT_EQ(dict_col->estimate_memory_usage(), 100 * sizeof(int32_t) + 100 * sizeof(uint8_t));
 }
@@ -121,8 +121,8 @@ TEST_F(StorageDictionarySegmentTest, MemoryUsageUInt16) {
   for (auto index = int16_t{0}; index < UINT8_MAX + 2; ++index) {
     value_segment_int->append(index);
   }
-  auto column = std::make_shared<DictionarySegment<int32_t>>(value_segment_int);
-  auto dict_col = std::dynamic_pointer_cast<opossum::DictionarySegment<int32_t>>(column);
+  const auto column = std::make_shared<DictionarySegment<int32_t>>(value_segment_int);
+  const auto dict_col = std::dynamic_pointer_cast<opossum::DictionarySegment<int32_t>>(column);
 
   EXPECT_EQ(dict_col->estimate_memory_usage(), (UINT8_MAX + 2) * sizeof(int32_t) + (UINT8_MAX + 2) * sizeof(uint16_t));
 }

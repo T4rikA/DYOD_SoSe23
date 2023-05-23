@@ -111,25 +111,25 @@ void compress_segment(const std::shared_ptr<AbstractSegment> segment,
 }
 
 void Table::compress_chunk(const ChunkID chunk_id) {
-  auto old_chunk = get_chunk(chunk_id);
-  auto segment_count = old_chunk->column_count();
+  const auto old_chunk = get_chunk(chunk_id);
+  const auto segment_count = old_chunk->column_count();
   auto new_chunk = std::make_shared<Chunk>();
   auto compressed_segments = std::vector<std::shared_ptr<AbstractSegment>>(segment_count);
 
   auto threads = std::vector<std::thread>();
-  for (auto segment_index = ColumnID{}; segment_index < segment_count; ++segment_index) {
-    auto type = this->column_type(segment_index);
-    auto old_segment = old_chunk->get_segment(segment_index);
+  for (auto segment_index = ColumnID{0}; segment_index < segment_count; ++segment_index) {
+    const auto type = this->column_type(segment_index);
+    const auto old_segment = old_chunk->get_segment(segment_index);
     auto worker = std::thread(compress_segment, old_segment, std::ref(compressed_segments), segment_index, type);
     threads.push_back(std::move(worker));
   }
   // threads join
-  for (auto thread_index = size_t{0}; thread_index < segment_count; ++thread_index) {
-    threads[thread_index].join();
+  for (auto& thread : threads) {
+    thread.join();
   }
 
-  for (auto segment_index = ColumnID{}; segment_index < segment_count; ++segment_index) {
-    new_chunk->add_segment(compressed_segments[segment_index]);
+  for (const auto& segment : compressed_segments) {
+    new_chunk->add_segment(segment);
   }
 
   _chunks[chunk_id] = new_chunk;
