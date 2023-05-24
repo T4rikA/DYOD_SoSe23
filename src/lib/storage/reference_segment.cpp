@@ -7,37 +7,35 @@ namespace opossum {
 
 ReferenceSegment::ReferenceSegment(const std::shared_ptr<const Table>& referenced_table,
                                    const ColumnID referenced_column_id, const std::shared_ptr<const PosList>& pos) {
-  // Implementation goes here
+  //TODO change to more meaningful error
+  Assert(referenced_table.column_name(referenced_column_id), "Table doesn't contain column_id!");
+  _referenced_table = referenced_table;
+  _referenced_column_id = referenced_column_id;
+  _positions = pos;
 }
 
 AllTypeVariant ReferenceSegment::operator[](const ChunkOffset chunk_offset) const {
-  // Implementation goes here
-  Fail("Implementation is missing.");
+  return pos_list().at(chunk_offset);
 }
 
 ChunkOffset ReferenceSegment::size() const {
-  // Implementation goes here
-  Fail("Implementation is missing.");
+  return pos_list().size();
 }
 
 const std::shared_ptr<const PosList>& ReferenceSegment::pos_list() const {
-  // Implementation goes here
-  Fail("Implementation is missing.");
+  return _positions;
 }
 
 const std::shared_ptr<const Table>& ReferenceSegment::referenced_table() const {
-  // Implementation goes here
-  Fail("Implementation is missing.");
+  return _referenced_table;
 }
 
 ColumnID ReferenceSegment::referenced_column_id() const {
-  // Implementation goes here
-  Fail("Implementation is missing.");
+  return _referenced_column_id;
 }
 
 size_t ReferenceSegment::estimate_memory_usage() const {
-  // Implementation goes here
-  Fail("Implementation is missing.");
+  return pos_list().size()*sizeof(RowID);
 }
 
 }  // namespace opossum
