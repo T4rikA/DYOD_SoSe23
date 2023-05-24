@@ -11,7 +11,7 @@ namespace opossum {
 
 std::shared_ptr<AbstractAttributeVector> get_attribute_vector(size_t vector_size, size_t size) {
   const auto bits_needed = std::bit_width(vector_size - 1);
-  Assert(bits_needed <= 32, "Too many values in dictionary, cant use more than 32 bits!");
+  Assert(bits_needed <= 32, "Too many values in dictionary, can't use more than 32 bits!");
   if (bits_needed <= 8) {
     return std::make_shared<FixedWidthIntegerVector<uint8_t>>(size);
   } else if (bits_needed <= 16) {
