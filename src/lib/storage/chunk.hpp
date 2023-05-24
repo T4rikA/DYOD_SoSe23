@@ -35,6 +35,8 @@ class Chunk : private Noncopyable {
   // Returns the segment at a given position.
   std::shared_ptr<AbstractSegment> get_segment(ColumnID column_id) const;
 
+  void add_segment_at_index(const std::shared_ptr<AbstractSegment> segment, ColumnID index);
+
  protected:
   std::vector<std::shared_ptr<AbstractSegment>> _segments;
 };

@@ -72,6 +72,7 @@ class Table : private Noncopyable {
   std::vector<std::string> _column_types;
   std::vector<bool> _column_nullable;
   ChunkOffset _target_chunk_size;
+  bool _last_chunk_encoded = false;
 };
 
 }  // namespace opossum

@@ -68,6 +68,75 @@ TEST_F(StorageDictionarySegmentTest, LowerUpperBound) {
   EXPECT_EQ(dict_segment->upper_bound(15), INVALID_VALUE_ID);
 }
 
-// TODO(student): You should add some more tests here (full coverage would be appreciated) and possibly in other files.
+TEST_F(StorageDictionarySegmentTest, AccessOperators) {
+  value_segment_str->append("Bill");
+  value_segment_str->append("Hasso");
+  value_segment_str->append(NULL_VALUE);
+
+  const auto dict_segment = std::make_shared<DictionarySegment<std::string>>(value_segment_str);
+
+  EXPECT_EQ(dict_segment->operator[](0), static_cast<AllTypeVariant>("Bill"));
+  EXPECT_EQ(dict_segment->operator[](1), static_cast<AllTypeVariant>("Hasso"));
+  EXPECT_TRUE(variant_is_null(dict_segment->operator[](2)));
+
+  EXPECT_EQ(dict_segment->get_typed_value(0), "Bill");
+  EXPECT_EQ(dict_segment->get_typed_value(1), "Hasso");
+
+  EXPECT_EQ(dict_segment->get(0), "Bill");
+  EXPECT_EQ(dict_segment->get(1), "Hasso");
+}
+
+TEST_F(StorageDictionarySegmentTest, ValueOfValueID) {
+  value_segment_str->append("Bill");
+  value_segment_str->append("Hasso");
+  value_segment_str->append(NULL_VALUE);
+
+  const auto dict_segment = std::make_shared<DictionarySegment<std::string>>(value_segment_str);
+
+  EXPECT_EQ(dict_segment->value_of_value_id(ValueID{1}), std::string("Bill"));
+  EXPECT_EQ(dict_segment->value_of_value_id(ValueID{2}), std::string("Hasso"));
+
+  EXPECT_THROW(dict_segment->value_of_value_id(dict_segment->null_value_id()), std::logic_error);
+}
+
+TEST_F(StorageDictionarySegmentTest, MemoryUsageString) {
+  value_segment_str->append("Hello");
+  const auto column_str = std::make_shared<DictionarySegment<std::string>>(value_segment_str);
+  const auto dict_col_str = std::dynamic_pointer_cast<opossum::DictionarySegment<std::string>>(column_str);
+
+  EXPECT_EQ(dict_col_str->estimate_memory_usage(), 1 * sizeof(std::string) + 1 * sizeof(uint8_t));
+}
+
+TEST_F(StorageDictionarySegmentTest, MemoryUsageUInt8) {
+  for (auto index = int8_t{0}; index < 100; ++index) {
+    value_segment_int->append(index);
+  }
+  const auto column = std::make_shared<DictionarySegment<int32_t>>(value_segment_int);
+  const auto dict_col = std::dynamic_pointer_cast<opossum::DictionarySegment<int32_t>>(column);
+
+  EXPECT_EQ(dict_col->estimate_memory_usage(), 100 * sizeof(int32_t) + 100 * sizeof(uint8_t));
+}
+
+TEST_F(StorageDictionarySegmentTest, MemoryUsageUInt16) {
+  for (auto index = int16_t{0}; index < UINT8_MAX + 2; ++index) {
+    value_segment_int->append(index);
+  }
+  const auto column = std::make_shared<DictionarySegment<int32_t>>(value_segment_int);
+  const auto dict_col = std::dynamic_pointer_cast<opossum::DictionarySegment<int32_t>>(column);
+
+  EXPECT_EQ(dict_col->estimate_memory_usage(), (UINT8_MAX + 2) * sizeof(int32_t) + (UINT8_MAX + 2) * sizeof(uint16_t));
+}
+
+TEST_F(StorageDictionarySegmentTest, MemoryUsageUInt32) {
+  for (auto index = int32_t{0}; index < (UINT16_MAX + 2); ++index) {
+    value_segment_int->append(index);
+  }
+
+  auto column = std::make_shared<DictionarySegment<int32_t>>(value_segment_int);
+  auto dict_col = std::dynamic_pointer_cast<opossum::DictionarySegment<int32_t>>(column);
+
+  EXPECT_EQ(dict_col->estimate_memory_usage(),
+            ((UINT16_MAX + 2)) * sizeof(int32_t) + ((UINT16_MAX + 2)) * sizeof(uint32_t));
+}
 
 }  // namespace opossum

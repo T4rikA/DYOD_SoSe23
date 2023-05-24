@@ -1,5 +1,8 @@
 #include "table.hpp"
 
+#include <thread>
+
+#include "dictionary_segment.hpp"
 #include "resolve_type.hpp"
 #include "utils/assert.hpp"
 #include "value_segment.hpp"
@@ -41,10 +44,11 @@ void Table::create_new_chunk() {
     new_chunk->add_segment(new_segment);
   }
   _chunks.emplace_back(new_chunk);
+  _last_chunk_encoded = false;
 }
 
 void Table::append(const std::vector<AllTypeVariant>& values) {
-  if (_chunks.back()->size() >= _target_chunk_size) {
+  if (_chunks.back()->size() >= _target_chunk_size || _last_chunk_encoded) {
     create_new_chunk();
   }
   _chunks.back()->append(values);
@@ -55,7 +59,7 @@ ColumnCount Table::column_count() const {
 }
 
 uint64_t Table::row_count() const {
-  return ((_chunks.size() - 1) * _target_chunk_size) + _chunks.back()->size();
+  return (chunk_count() - 1) * _chunks.front()->size() + _chunks.back()->size();
 }
 
 ChunkID Table::chunk_count() const {
@@ -96,12 +100,42 @@ std::shared_ptr<const Chunk> Table::get_chunk(ChunkID chunk_id) const {
   return _chunks.at(chunk_id);
 }
 
-// GCOVR_EXCL_START
-void Table::compress_chunk(const ChunkID chunk_id) {
-  // Implementation goes here
-  Fail("Implementation is missing.");
+void compress_segment(const std::shared_ptr<AbstractSegment> segment,
+                      std::vector<std::shared_ptr<AbstractSegment>>& compressed_segments, ColumnID segment_index,
+                      std::string type) {
+  resolve_data_type(type, [&](const auto data_type_t) {
+    using ColumnDataType = typename decltype(data_type_t)::type;
+    auto compressed_segment = std::make_shared<DictionarySegment<ColumnDataType>>(segment);
+    compressed_segments[segment_index] = compressed_segment;
+  });
 }
 
-// GCOVR_EXCL_STOP
+void Table::compress_chunk(const ChunkID chunk_id) {
+  const auto old_chunk = get_chunk(chunk_id);
+  const auto segment_count = old_chunk->column_count();
+  auto new_chunk = std::make_shared<Chunk>();
+  auto compressed_segments = std::vector<std::shared_ptr<AbstractSegment>>(segment_count);
+
+  auto threads = std::vector<std::thread>();
+  for (auto segment_index = ColumnID{0}; segment_index < segment_count; ++segment_index) {
+    const auto type = this->column_type(segment_index);
+    const auto old_segment = old_chunk->get_segment(segment_index);
+    auto worker = std::thread(compress_segment, old_segment, std::ref(compressed_segments), segment_index, type);
+    threads.push_back(std::move(worker));
+  }
+  // threads join
+  for (auto& thread : threads) {
+    thread.join();
+  }
+
+  for (const auto& segment : compressed_segments) {
+    new_chunk->add_segment(segment);
+  }
+
+  _chunks[chunk_id] = new_chunk;
+  if (chunk_id == chunk_count() - 1) {
+    _last_chunk_encoded = true;
+  }
+}
 
 }  // namespace opossum

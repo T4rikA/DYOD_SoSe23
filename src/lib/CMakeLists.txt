@@ -5,6 +5,8 @@ set(
     null_value.hpp
     resolve_type.hpp
     storage/abstract_attribute_vector.hpp
+    storage/fixed_width_integer_vector.hpp
+    storage/fixed_width_integer_vector.cpp
     storage/abstract_segment.hpp
     storage/chunk.cpp
     storage/chunk.hpp
