@@ -11,7 +11,8 @@ namespace opossum {
 
 std::shared_ptr<AbstractAttributeVector> get_attribute_vector(size_t vector_size, size_t size) {
   const auto bits_needed = std::bit_width(vector_size - 1);
-  Assert(bits_needed <= 32, "Too many values in dictionary, cant use more than 32 bits!");
+  Assert(vector_size-1 < INVALID_VALUE_ID, "Too many values in dictionary, collision with INVALID_VALUE_ID");
+  Assert(bits_needed <= 32, "Too many values in dictionary, can't use more than 32 bits!");
   if (bits_needed <= 8) {
     return std::make_shared<FixedWidthIntegerVector<uint8_t>>(size);
   } else if (bits_needed <= 16) {
@@ -27,27 +28,27 @@ DictionarySegment<T>::DictionarySegment(const std::shared_ptr<AbstractSegment>& 
   const auto value_segment = std::dynamic_pointer_cast<ValueSegment<T>>(abstract_segment);
   Assert(value_segment, "Can't encode abstract segment, because it is no value segment.");
 
-  const auto values = value_segment->values();
+  const auto& values = value_segment->values();
   const auto value_segment_size = value_segment->size();
   _segment_nullable = value_segment->is_nullable();
 
   // stores value -> id
   auto unique_values = std::map<T, ValueID>();
 
-  auto last_index = _segment_nullable ? 1 : 0;
+  auto last_index = _segment_nullable ? ValueID(1) : ValueID(0);
   for (auto index = size_t{0}; index < value_segment_size; ++index) {
     if (!value_segment->is_null(index)) {
       const auto value = values[index];
-      const auto inserted = unique_values.insert(std::pair(value, last_index));
-      if (inserted.second) {
-        ++last_index;
-      }
+      unique_values.insert(std::pair(value, 0));
     }
   }
 
-  for (auto [value, key] : unique_values) {
+  _dictionary.reserve(unique_values.size());
+  for (auto& [value, id] : unique_values) {
     _dictionary.push_back(value);
+    id = last_index++;
   }
+  _dictionary.shrink_to_fit();
 
   const auto attribute_vector = get_attribute_vector(unique_values.size(), value_segment_size);
 
