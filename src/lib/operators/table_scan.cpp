@@ -4,21 +4,27 @@
 namespace opossum {
 
 TableScan::TableScan(const std::shared_ptr<const AbstractOperator>& in, const ColumnID column_id, const ScanType scan_type,
-          const AllTypeVariant search_value) {}
+          const AllTypeVariant search_value) {
+  _in = in;
+  _column_id = column_id;
+  _scan_type = scan_type;
+  _search_value = search_value;
+}
 
 
 ColumnID TableScan::column_id() const {
-  Fail("Implementation missing.");
+  return _column_id;
 }
 
 ScanType TableScan::scan_type() const {
-  Fail("Implementation missing.");
+  return _scan_type;
 }
 
 const AllTypeVariant& TableScan::search_value() const {
-  Fail("Implementation missing.");
+  return _search_value;
 }
 
-
-
+std::shared_ptr<const Table> TableScan::_on_execute() {
+  Fail("Implementation missing.");
+}
 }  // namespace opossum

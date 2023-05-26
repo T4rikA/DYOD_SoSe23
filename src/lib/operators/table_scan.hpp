@@ -10,18 +10,16 @@ class TableScan : public AbstractOperator {
  public:
   TableScan(const std::shared_ptr<const AbstractOperator>& in, const ColumnID column_id, const ScanType scan_type,
             const AllTypeVariant search_value);
-
   ColumnID column_id() const;
-
   ScanType scan_type() const;
-
   const AllTypeVariant& search_value() const;
 
  protected:
-  std::shared_ptr<const Table> _on_execute() override {
-    // TODO(student) implement it in a source file and change this to a declaration.
-    Fail("Implementation missing.");
-  }
+  std::shared_ptr<const Table> _on_execute() override;
+  std::shared_ptr<const AbstractOperator> _in;
+  ColumnID _column_id;
+  ScanType _scan_type;
+  AllTypeVariant _search_value;
 };
 
 }  // namespace opossum
