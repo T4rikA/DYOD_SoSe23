@@ -44,6 +44,46 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
       auto typed_value_segment = std::dynamic_pointer_cast<ValueSegment<Type>>(segment);
       if(typed_value_segment){
         // scan value segment
+        auto values = typed_value_segment->values();
+        auto value_count = typed_value_segment->size();
+        for (auto chunk_offset = ChunkOffset{0}; chunk_offset < value_count; ++chunk_offset) {
+          auto value = values[chunk_offset];
+          const auto typed_search_value = type_cast<Type>(_search_value);
+          const auto typed_given_value = type_cast<Type>(value);
+
+          switch (_scan_type) {
+            case ScanType::OpEquals:
+              if (typed_given_value == typed_search_value) {
+                positions_pointers->push_back(RowID{chunk_id, chunk_offset});
+              }
+              break;
+            case ScanType::OpNotEquals:
+              if (typed_given_value != typed_search_value) {
+                positions_pointers->push_back(RowID{chunk_id, chunk_offset});
+              }
+              break;
+            case ScanType::OpLessThan:
+              if (typed_given_value < typed_search_value) {
+                positions_pointers->push_back(RowID{chunk_id, chunk_offset});
+              }
+              break;
+            case ScanType::OpLessThanEquals:
+              if (typed_given_value <= typed_search_value) {
+                positions_pointers->push_back(RowID{chunk_id, chunk_offset});
+              }
+              break;
+            case ScanType::OpGreaterThan:
+              if (typed_given_value > typed_search_value) {
+                positions_pointers->push_back(RowID{chunk_id, chunk_offset});
+              }
+              break;
+            case ScanType::OpGreaterThanEquals:
+              if (typed_given_value >= typed_search_value) {
+                positions_pointers->push_back(RowID{chunk_id, chunk_offset});
+              }
+              break;
+          }
+        };
       }
 
       auto typed_dict_segment = std::dynamic_pointer_cast<DictionarySegment<Type>>(segment);
