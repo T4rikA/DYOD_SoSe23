@@ -15,9 +15,11 @@ ReferenceSegment::ReferenceSegment(const std::shared_ptr<const Table>& reference
 }
 
 AllTypeVariant ReferenceSegment::operator[](const ChunkOffset chunk_offset) const {
+  DebugAssert(chunk_offset < size(), "Chunk offset " + std::to_string(chunk_offset) +
+                                         " is invalid for reference segment with " + std::to_string(size()) + " rows.");
   const auto row_id = pos_list()->at(chunk_offset);
-  //TODO is at the best method to use?
-  return referenced_table()->get_chunk(row_id.chunk_id)->get_segment(referenced_column_id())->operator[](row_id.chunk_offset);
+  auto segment = referenced_table()->get_chunk(row_id.chunk_id)->get_segment(referenced_column_id());
+  return (*segment)[row_id.chunk_offset];
 }
 
 ChunkOffset ReferenceSegment::size() const {
