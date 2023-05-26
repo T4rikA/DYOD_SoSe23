@@ -4,6 +4,7 @@
 #include "storage/dictionary_segment.hpp"
 #include "storage/reference_segment.hpp"
 #include "storage/value_segment.hpp"
+#include "storage/abstract_attribute_vector.hpp"
 
 namespace opossum {
 
@@ -38,7 +39,7 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
   // go over all segments of table and depending on their type, collect the pos lists of the matching values to search value
   for(auto chunk_id = ChunkID{0}; chunk_id<chunk_count; chunk_id++){
     auto segment = table->get_chunk(chunk_id)->get_segment(_column_id);
-    resolve_data_type(data_type, [&] (auto type) {
+    resolve_data_type(data_type, [&segment, this, &positions_pointers, &chunk_id] (auto type) {
       using Type = typename decltype(type)::type;
 
       auto typed_value_segment = std::dynamic_pointer_cast<ValueSegment<Type>>(segment);
@@ -89,6 +90,48 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
       auto typed_dict_segment = std::dynamic_pointer_cast<DictionarySegment<Type>>(segment);
       if(typed_dict_segment){
         // scan dict segment
+        auto dictionary = typed_dict_segment->dictionary();
+        auto attribute_vector = typed_dict_segment->attribute_vector();
+        auto value_count = typed_dict_segment->size();
+        const auto typed_search_value = type_cast<Type>(_search_value);
+
+        for (auto chunk_offset = ChunkOffset{0}; chunk_offset < value_count; ++chunk_offset) {
+          auto value = dictionary[attribute_vector->get(chunk_offset)];
+          const auto typed_given_value = type_cast<Type>(value);
+
+          switch (_scan_type) {
+            case ScanType::OpEquals:
+              if (typed_given_value == typed_search_value) {
+                positions_pointers->push_back(RowID{chunk_id, chunk_offset});
+              }
+              break;
+            case ScanType::OpNotEquals:
+              if (typed_given_value != typed_search_value) {
+                positions_pointers->push_back(RowID{chunk_id, chunk_offset});
+              }
+              break;
+            case ScanType::OpLessThan:
+              if (typed_given_value < typed_search_value) {
+                positions_pointers->push_back(RowID{chunk_id, chunk_offset});
+              }
+              break;
+            case ScanType::OpLessThanEquals:
+              if (typed_given_value <= typed_search_value) {
+                positions_pointers->push_back(RowID{chunk_id, chunk_offset});
+              }
+              break;
+            case ScanType::OpGreaterThan:
+              if (typed_given_value > typed_search_value) {
+                positions_pointers->push_back(RowID{chunk_id, chunk_offset});
+              }
+              break;
+            case ScanType::OpGreaterThanEquals:
+              if (typed_given_value >= typed_search_value) {
+                positions_pointers->push_back(RowID{chunk_id, chunk_offset});
+              }
+              break;
+          }
+        }
       }
 
     });
