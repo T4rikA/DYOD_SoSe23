@@ -9,6 +9,7 @@ namespace opossum {
 
 class TableScan : public AbstractOperator {
  public:
+  // TODO: Add comments
   TableScan(const std::shared_ptr<const AbstractOperator>& in, const ColumnID column_id, const ScanType scan_type,
             const AllTypeVariant search_value);
   ColumnID column_id() const;

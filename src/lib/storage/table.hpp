@@ -11,7 +11,9 @@ class TableStatistics;
 // A table is partitioned horizontally into a number of chunks
 class Table : private Noncopyable {
  public:
-  struct TableDefinitionStruct {
+
+  // TODO: Use this in other places
+  struct ColumnDefinitionStruct {
     std::string column_name;
     std::string column_type;
     bool column_nullable;
@@ -21,7 +23,8 @@ class Table : private Noncopyable {
   // size minus 1. A table always holds at least one chunk.
   explicit Table(const ChunkOffset target_chunk_size = std::numeric_limits<ChunkOffset>::max() - 1);
 
-  Table(ChunkOffset, std::shared_ptr<Chunk> chunk, std::vector<Table::TableDefinitionStruct> column_definitions);
+  // Create table given initial chunk and column definitions
+  Table(ChunkOffset, std::shared_ptr<Chunk> chunk, std::vector<Table::ColumnDefinitionStruct> column_definitions);
 
   // Returns the number of columns (cannot exceed ColumnID (uint16_t)).
   ColumnCount column_count() const;

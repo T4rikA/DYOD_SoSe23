@@ -37,6 +37,7 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
   auto column_count = table->column_count();
   auto data_type = table->column_type(_column_id);
   auto chunk_count = table->chunk_count();
+
   // go over all segments of table and depending on their type, collect the pos lists of the matching values to search value
   for(auto chunk_id = ChunkID{0}; chunk_id<chunk_count; chunk_id++){
     auto segment = table->get_chunk(chunk_id)->get_segment(_column_id);
@@ -48,6 +49,8 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
         // scan value segment
         auto values = typed_value_segment->values();
         auto value_count = typed_value_segment->size();
+
+        // TODO: Refactor into function
         for (auto chunk_offset = ChunkOffset{0}; chunk_offset < value_count; ++chunk_offset) {
           auto value = values[chunk_offset];
           const auto typed_search_value = type_cast<Type>(_search_value);
@@ -96,6 +99,7 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
         auto value_count = typed_dict_segment->size();
         const auto typed_search_value = type_cast<Type>(_search_value);
 
+        // TODO: Refactor into function
         for (auto chunk_offset = ChunkOffset{0}; chunk_offset < value_count; ++chunk_offset) {
           auto value = dictionary[attribute_vector->get(chunk_offset)];
           const auto typed_given_value = type_cast<Type>(value);
@@ -138,22 +142,21 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
     });
   }
 
-  // - create ref segments and add them
+  // create ref segments and add them
   auto chunk = std::make_shared<Chunk>();
   for (auto column_id = ColumnID{0}; column_id < column_count; ++column_id) {
-
     auto reference_segment = std::make_shared<ReferenceSegment>(table, column_id, positions_pointers);
     chunk->add_segment(reference_segment);
   }
 
-  auto column_definitions = std::vector<Table::TableDefinitionStruct>();
+  auto column_definitions = std::vector<Table::ColumnDefinitionStruct>();
   for (auto column_id = ColumnID{0}; column_id < column_count; ++column_id) {
-    auto tds = Table::TableDefinitionStruct{table->column_name(column_id), table->column_type(column_id), table->column_nullable(column_id)};
-    column_definitions.push_back(tds);
+    auto column_definition = Table::ColumnDefinitionStruct{table->column_name(column_id), table->column_type(column_id), table->column_nullable(column_id)};
+    column_definitions.push_back(column_definition);
   }
+
   // build the output table
   auto output_table = std::make_shared<Table>(10, chunk, column_definitions);
-  // - create column defs first
 
   return output_table;
 }
