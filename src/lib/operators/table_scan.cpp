@@ -5,6 +5,7 @@
 #include "storage/reference_segment.hpp"
 #include "storage/value_segment.hpp"
 #include "storage/abstract_attribute_vector.hpp"
+#include "storage/table.hpp"
 
 namespace opossum {
 
@@ -32,7 +33,7 @@ const AllTypeVariant& TableScan::search_value() const {
 std::shared_ptr<const Table> TableScan::_on_execute() {
   // get posListPtr, tableptr, columncount, data type of table
   auto positions_pointers = std::make_shared<PosList>();
-  auto table = _left_input_table();
+  auto table = _in->get_output();
   auto column_count = table->column_count();
   auto data_type = table->column_type(_column_id);
   auto chunk_count = table->chunk_count();
@@ -136,12 +137,7 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
 
     });
   }
-  // build the output table
-  auto output_table = std::make_shared<Table>();
-  // - create column defs first
-  for (auto column_id = ColumnID{0}; column_id < column_count; ++column_id) {
-    output_table->add_column(table->column_name(column_id), table->column_type(column_id), table->column_nullable(column_id));
-  }
+
   // - create ref segments and add them
   auto chunk = std::make_shared<Chunk>();
   for (auto column_id = ColumnID{0}; column_id < column_count; ++column_id) {
@@ -149,6 +145,16 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
     auto reference_segment = std::make_shared<ReferenceSegment>(table, column_id, positions_pointers);
     chunk->add_segment(reference_segment);
   }
+
+  auto column_definitions = std::vector<Table::TableDefinitionStruct>();
+  for (auto column_id = ColumnID{0}; column_id < column_count; ++column_id) {
+    auto tds = Table::TableDefinitionStruct{table->column_name(column_id), table->column_type(column_id), table->column_nullable(column_id)};
+    column_definitions.push_back(tds);
+  }
+  // build the output table
+  auto output_table = std::make_shared<Table>(10, chunk, column_definitions);
+  // - create column defs first
+
   return output_table;
 }
 }  // namespace opossum

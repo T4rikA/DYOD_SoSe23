@@ -11,9 +11,17 @@ class TableStatistics;
 // A table is partitioned horizontally into a number of chunks
 class Table : private Noncopyable {
  public:
+  struct TableDefinitionStruct {
+    std::string column_name;
+    std::string column_type;
+    bool column_nullable;
+  };
+
   // Creates a table. The parameter specifies the maximum chunk size, i.e., partition size default is the maximum chunk
   // size minus 1. A table always holds at least one chunk.
   explicit Table(const ChunkOffset target_chunk_size = std::numeric_limits<ChunkOffset>::max() - 1);
+
+  Table(ChunkOffset, std::shared_ptr<Chunk> chunk, std::vector<Table::TableDefinitionStruct> column_definitions);
 
   // Returns the number of columns (cannot exceed ColumnID (uint16_t)).
   ColumnCount column_count() const;
