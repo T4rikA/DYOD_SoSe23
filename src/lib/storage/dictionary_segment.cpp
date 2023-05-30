@@ -9,9 +9,8 @@
 
 namespace opossum {
 
-std::shared_ptr<AbstractAttributeVector> get_attribute_vector(size_t vector_size, size_t size) {
-  const auto bits_needed = std::bit_width(vector_size - 1);
-  Assert(vector_size-1 < INVALID_VALUE_ID, "Too many values in dictionary, collision with INVALID_VALUE_ID");
+std::shared_ptr<AbstractAttributeVector> get_attribute_vector(size_t max_element, size_t size) {
+  const auto bits_needed = std::bit_width(max_element);
   Assert(bits_needed <= 32, "Too many values in dictionary, can't use more than 32 bits!");
   if (bits_needed <= 8) {
     return std::make_shared<FixedWidthIntegerVector<uint8_t>>(size);
@@ -50,7 +49,7 @@ DictionarySegment<T>::DictionarySegment(const std::shared_ptr<AbstractSegment>& 
   }
   _dictionary.shrink_to_fit();
 
-  const auto attribute_vector = get_attribute_vector(unique_values.size(), value_segment_size);
+  const auto attribute_vector = get_attribute_vector(last_index-1,value_segment_size);
 
   for (auto index = size_t{0}; index < value_segment_size; ++index) {
     if (value_segment->is_null(index)) {
