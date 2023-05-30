@@ -156,7 +156,7 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
   }
 
   // build the output table
-  auto output_table = std::make_shared<Table>(10, chunk, column_definitions);
+  auto output_table = std::make_shared<Table>(chunk, column_definitions);
 
   return output_table;
 }
