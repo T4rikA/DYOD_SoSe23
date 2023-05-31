@@ -14,6 +14,15 @@ Table::Table(const ChunkOffset target_chunk_size)
   create_new_chunk();
 }
 
+Table::Table(std::shared_ptr<Chunk> chunk, std::vector<Table::ColumnDefinitionStruct> column_definitions) {
+  for (auto column_definition : column_definitions) {
+    add_column_definition(column_definition.column_name, column_definition.column_type,
+                          column_definition.column_nullable);
+  }
+  _chunks.push_back(chunk);
+  // TODO(team): Do we need to set the target chunk size here?
+}
+
 void Table::add_column_definition(const std::string& name, const std::string& type, const bool nullable) {
   _column_names.emplace_back(name);
   _column_types.emplace_back(type);

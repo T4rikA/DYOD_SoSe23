@@ -1,6 +1,11 @@
 #pragma once
 
 #include "abstract_operator.hpp"
+#include "all_type_variant.hpp"
+#include "storage/dictionary_segment.hpp"
+#include "storage/reference_segment.hpp"
+#include "storage/table.hpp"
+#include "storage/value_segment.hpp"
 #include "utils/assert.hpp"
 
 namespace opossum {
@@ -8,30 +13,25 @@ namespace opossum {
 class TableScan : public AbstractOperator {
  public:
   TableScan(const std::shared_ptr<const AbstractOperator>& in, const ColumnID column_id, const ScanType scan_type,
-            const AllTypeVariant search_value) {
-    // TODO(student) implement it in a source file and change this to a declaration.
-  }
-
-  ColumnID column_id() const {
-    // TODO(student) implement it in a source file and change this to a declaration.
-    Fail("Implementation missing.");
-  }
-
-  ScanType scan_type() const {
-    // TODO(student) implement it in a source file and change this to a declaration.
-    Fail("Implementation missing.");
-  }
-
-  const AllTypeVariant& search_value() const {
-    // TODO(student) implement it in a source file and change this to a declaration.
-    Fail("Implementation missing.");
-  }
+            const AllTypeVariant search_value);
+  ColumnID column_id() const;
+  ScanType scan_type() const;
+  const AllTypeVariant& search_value() const;
 
  protected:
-  std::shared_ptr<const Table> _on_execute() override {
-    // TODO(student) implement it in a source file and change this to a declaration.
-    Fail("Implementation missing.");
-  }
+  std::shared_ptr<const Table> _on_execute();
+  template <typename T>
+  void scan_value_segment(const std::shared_ptr<ValueSegment<T>>& segment, PosList& positions_list, ChunkID chunk_id);
+  template <typename T>
+  void scan_dict_segment(const std::shared_ptr<DictionarySegment<T>>& segment, PosList& positions_list,
+                         ChunkID chunk_id);
+  void scan_reference_segment(const std::shared_ptr<ReferenceSegment> segment, PosList& positions_list);
+  template <typename T>
+  bool compare(const T& a, const T& b);
+  std::shared_ptr<const AbstractOperator> _in;
+  ColumnID _column_id;
+  ScanType _scan_type;
+  AllTypeVariant _search_value;
 };
 
 }  // namespace opossum

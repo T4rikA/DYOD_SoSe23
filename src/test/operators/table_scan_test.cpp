@@ -97,7 +97,7 @@ TEST_F(OperatorsTableScanTest, DoubleScan) {
   auto scan_1 = std::make_shared<TableScan>(_table_wrapper, ColumnID{0}, ScanType::OpGreaterThanEquals, 1234);
   scan_1->execute();
 
-  auto scan_2 = std::make_shared<TableScan>(scan_1, ColumnID{1}, ScanType::OpLessThan, 457.9);
+  auto scan_2 = std::make_shared<TableScan>(scan_1, ColumnID{1}, ScanType::OpLessThan, 457.9f);
   scan_2->execute();
 
   EXPECT_TABLE_EQ(scan_2->get_output(), expected_result);
@@ -281,6 +281,24 @@ TEST_F(OperatorsTableScanTest, ScanOnReferenceSegmentWithNullValue) {
 
     ASSERT_COLUMN_EQ(scan_2->get_output(), ColumnID{1}, test.second);
   }
+}
+
+TEST_F(OperatorsTableScanTest, ReturnsCorrectColumn) {
+  const auto scan = std::make_shared<TableScan>(_table_wrapper, ColumnID{1}, ScanType::OpNotEquals, 42);
+
+  EXPECT_EQ(scan->column_id(), ColumnID{1});
+}
+
+TEST_F(OperatorsTableScanTest, ReturnsCorrectScanType) {
+  const auto scan = std::make_shared<TableScan>(_table_wrapper, ColumnID{0}, ScanType::OpNotEquals, 42);
+
+  EXPECT_EQ(scan->scan_type(), ScanType::OpNotEquals);
+}
+
+TEST_F(OperatorsTableScanTest, ReturnsCorrectSearchValue) {
+  const auto scan = std::make_shared<TableScan>(_table_wrapper, ColumnID{1}, ScanType::OpEquals, 1234);
+
+  EXPECT_EQ(scan->search_value(), AllTypeVariant{1234});
 }
 
 }  // namespace opossum

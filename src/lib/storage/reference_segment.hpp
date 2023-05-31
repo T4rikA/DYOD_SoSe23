@@ -15,6 +15,8 @@ class ReferenceSegment : public AbstractSegment {
 
   AllTypeVariant operator[](const ChunkOffset chunk_offset) const override;
 
+  AllTypeVariant get_row_id(const RowID row_id) const;
+
   ChunkOffset size() const override;
 
   const std::shared_ptr<const PosList>& pos_list() const;
@@ -24,6 +26,11 @@ class ReferenceSegment : public AbstractSegment {
   ColumnID referenced_column_id() const;
 
   size_t estimate_memory_usage() const final;
+
+ protected:
+  std::shared_ptr<const Table> _referenced_table;
+  ColumnID _referenced_column_id;
+  std::shared_ptr<const PosList> _positions;
 };
 
 }  // namespace opossum
