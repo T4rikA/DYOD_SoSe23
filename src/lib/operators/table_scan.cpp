@@ -37,10 +37,13 @@ void TableScan::scan_value_segment(const std::shared_ptr<ValueSegment<T>>& segme
 
   // TODO(team): Refactor into function.
   for (auto chunk_offset = ChunkOffset{0}; chunk_offset < value_count; ++chunk_offset) {
+    if(segment->is_null(chunk_offset) || variant_is_null(search_value())){
+      continue;
+    }
+
     auto value = values[chunk_offset];
     const auto typed_search_value = type_cast<T>(search_value());
     const auto typed_given_value = type_cast<T>(value);
-
     switch (scan_type()) {
       case ScanType::OpEquals:
         if (typed_given_value == typed_search_value) {
@@ -54,6 +57,7 @@ void TableScan::scan_value_segment(const std::shared_ptr<ValueSegment<T>>& segme
         break;
       case ScanType::OpLessThan:
         if (typed_given_value < typed_search_value) {
+          std::cout << "value segment " << typed_given_value << "\n";
           positions_list.push_back(RowID{chunk_id, chunk_offset});
         }
         break;
@@ -79,17 +83,20 @@ void TableScan::scan_value_segment(const std::shared_ptr<ValueSegment<T>>& segme
 // TODO(team): Check if type cast works.
 template <typename T>
 void TableScan::scan_dict_segment(const std::shared_ptr<DictionarySegment<T>>& segment, PosList& positions_list,
-                                  ChunkID chunk_id) {
+                                  ChunkID chunk_id) {      
   auto dictionary = segment->dictionary();
   auto attribute_vector = segment->attribute_vector();
   auto value_count = segment->size();
-  const auto typed_search_value = type_cast<T>(search_value());
 
   // TODO(team): Refactor into function.
   for (auto chunk_offset = ChunkOffset{0}; chunk_offset < value_count; ++chunk_offset) {
-    auto value = dictionary[attribute_vector->get(chunk_offset)];
-    const auto typed_given_value = type_cast<T>(value);
+    if(variant_is_null(segment->operator[](chunk_offset)) || variant_is_null(search_value())){
+      continue;
+    }
+    const auto typed_search_value = type_cast<T>(search_value());
 
+    const auto value = segment->get(chunk_offset);
+    const auto typed_given_value = value;
     switch (scan_type()) {
       case ScanType::OpEquals:
         if (typed_given_value == typed_search_value) {
@@ -103,6 +110,7 @@ void TableScan::scan_dict_segment(const std::shared_ptr<DictionarySegment<T>>& s
         break;
       case ScanType::OpLessThan:
         if (typed_given_value < typed_search_value) {
+          std::cout << "dict segment " << typed_given_value << "\n";
           positions_list.push_back(RowID{chunk_id, chunk_offset});
         }
         break;
@@ -128,6 +136,9 @@ void TableScan::scan_dict_segment(const std::shared_ptr<DictionarySegment<T>>& s
 void TableScan::scan_reference_segment(const std::shared_ptr<ReferenceSegment> segment, PosList& positions_list) {
   for (const auto row_id : *segment->pos_list()) {
     const auto value = segment->get_row_id(row_id);
+    if(variant_is_null(value) || variant_is_null(search_value())){
+      continue;
+    }
     const auto typed_given_value = value;
     const auto typed_search_value = search_value();
     // TODO(team): Refactor into function.
@@ -139,6 +150,7 @@ void TableScan::scan_reference_segment(const std::shared_ptr<ReferenceSegment> s
         break;
       case ScanType::OpNotEquals:
         if (typed_given_value != typed_search_value) {
+          std::cout << "reference segment " << typed_given_value << "\n";
           positions_list.push_back(row_id);
         }
         break;
@@ -177,7 +189,7 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
   for (auto chunk_id = ChunkID{0}; chunk_id < chunk_count; chunk_id++) {
     auto segment = table->get_chunk(chunk_id)->get_segment(column_id());
 
-    resolve_data_type(data_type, [&segment, this, &positions_list, &chunk_id](auto type) {
+    resolve_data_type(data_type, [&segment, this, &positions_list, &chunk_id, &table](auto type) {
       using Type = typename decltype(type)::type;
 
       const auto typed_value_segment = std::dynamic_pointer_cast<ValueSegment<Type>>(segment);
@@ -192,6 +204,7 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
         scan_dict_segment(typed_dict_segment, *positions_list, chunk_id);
       } else {
         scan_reference_segment(reference_segment, *positions_list);
+        table = reference_segment->referenced_table();
       }
     });
   }
