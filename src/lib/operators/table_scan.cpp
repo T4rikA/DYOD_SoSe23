@@ -30,7 +30,8 @@ const AllTypeVariant& TableScan::search_value() const {
 }
 
 template <typename T>
-std::shared_ptr<PosList> TableScan::scan_value_segment(const ValueSegment<T>& segment, const std::shared_ptr<PosList>& positions_list, const ChunkID chunk_id) {
+void TableScan::scan_value_segment(const std::shared_ptr<ValueSegment<T>>& segment, PosList& positions_list,
+                                              ChunkID chunk_id) {
   auto values = segment.values();
   auto value_count = segment.size();
 
@@ -79,7 +80,8 @@ std::shared_ptr<PosList> TableScan::scan_value_segment(const ValueSegment<T>& se
 
 // TODO check type cast works
 template <typename T>
-std::shared_ptr<PosList> TableScan::scan_dict_segment(const DictionarySegment<T>& segment, const std::shared_ptr<PosList>& positions_list, const ChunkID chunk_id) {
+std::shared_ptr<PosList> TableScan::scan_dict_segment(const std::shared_ptr<DictionarySegment<T>>& segment,
+                                                      PosList& positions_list, ChunkID chunk_id) {
   auto dictionary = segment->dictionary();
   auto attribute_vector = segment->attribute_vector();
   auto value_count = segment->size();
@@ -127,8 +129,8 @@ std::shared_ptr<PosList> TableScan::scan_dict_segment(const DictionarySegment<T>
   return positions_list;
 }
 
-std::shared_ptr<PosList> TableScan::scan_reference_segment(const ReferenceSegment& segment, const std::shared_ptr<PosList>& positions_list) {
-
+std::shared_ptr<PosList> TableScan::scan_reference_segment(const std::shared_ptr<ReferenceSegment> segment,
+                                                           PosList& positions_list) {
   return positions_list;
 }
 
@@ -138,7 +140,7 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
   auto column_count = table->column_count();
   auto data_type = table->column_type(column_id());
   auto chunk_count = table->chunk_count();
-  auto positions_list = std::make_shared<PosList>;
+  auto positions_list = PosList();
 
   // go over all segments of table and depending on their type, collect the pos lists of the matching values to search value
   for (auto chunk_id = ChunkID{0}; chunk_id < chunk_count; chunk_id++) {
@@ -154,11 +156,11 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
       Assert(typed_value_segment || typed_dict_segment || reference_segment,
              "TableScan error: segment is not from value segment, dict segment or reference segment.");
       if (typed_value_segment) {
-        scan_value_segment(*typed_value_segment, positions_list, chunk_id);
+        scan_value_segment(typed_value_segment, positions_list, chunk_id);
       } else if (typed_dict_segment) {
-        scan_dict_segment(*typed_dict_segment, positions_list, chunk_id);
+        scan_dict_segment(typed_dict_segment, positions_list, chunk_id);
       } else {
-        scan_reference_segment(*reference_segment, positions_list);
+        scan_reference_segment(reference_segment, positions_list);
       }
     });
   }
