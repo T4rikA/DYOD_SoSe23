@@ -7,8 +7,6 @@ namespace opossum {
 
 ReferenceSegment::ReferenceSegment(const std::shared_ptr<const Table>& referenced_table,
                                    const ColumnID referenced_column_id, const std::shared_ptr<const PosList>& pos) {
-  //TODO change to more meaningful error
-  //Assert(referenced_table->column_name(referenced_column_id), "Table doesn't contain column_id!");
   _referenced_table = referenced_table;
   _referenced_column_id = referenced_column_id;
   _positions = pos;
@@ -46,7 +44,7 @@ ColumnID ReferenceSegment::referenced_column_id() const {
 }
 
 size_t ReferenceSegment::estimate_memory_usage() const {
-  return pos_list()->size()*sizeof(RowID);
+  return pos_list()->size() * sizeof(RowID);
 }
 
 }  // namespace opossum

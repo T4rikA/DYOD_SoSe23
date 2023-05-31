@@ -12,7 +12,6 @@ namespace opossum {
 
 class TableScan : public AbstractOperator {
  public:
-  // TODO: Add comments
   TableScan(const std::shared_ptr<const AbstractOperator>& in, const ColumnID column_id, const ScanType scan_type,
             const AllTypeVariant search_value);
   ColumnID column_id() const;
@@ -22,13 +21,11 @@ class TableScan : public AbstractOperator {
  protected:
   std::shared_ptr<const Table> _on_execute();
   template <typename T>
-  void scan_value_segment(const std::shared_ptr<ValueSegment<T>>& segment, PosList& positions_list,
-                                              ChunkID chunk_id);
+  void scan_value_segment(const std::shared_ptr<ValueSegment<T>>& segment, PosList& positions_list, ChunkID chunk_id);
   template <typename T>
-  void scan_dict_segment(const std::shared_ptr<DictionarySegment<T>>& segment,
-                                             PosList& positions_list, ChunkID chunk_id);
-  void scan_reference_segment(const std::shared_ptr<ReferenceSegment> segment,
-                                                  PosList& positions_list);
+  void scan_dict_segment(const std::shared_ptr<DictionarySegment<T>>& segment, PosList& positions_list,
+                         ChunkID chunk_id);
+  void scan_reference_segment(const std::shared_ptr<ReferenceSegment> segment, PosList& positions_list);
   std::shared_ptr<const AbstractOperator> _in;
   ColumnID _column_id;
   ScanType _scan_type;

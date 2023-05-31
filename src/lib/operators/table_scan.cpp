@@ -35,7 +35,7 @@ void TableScan::scan_value_segment(const std::shared_ptr<ValueSegment<T>>& segme
   auto values = segment->values();
   auto value_count = segment->size();
 
-  // TODO: Refactor into function
+  // TODO(team): Refactor into function.
   for (auto chunk_offset = ChunkOffset{0}; chunk_offset < value_count; ++chunk_offset) {
     auto value = values[chunk_offset];
     const auto typed_search_value = type_cast<T>(search_value());
@@ -73,10 +73,10 @@ void TableScan::scan_value_segment(const std::shared_ptr<ValueSegment<T>>& segme
         }
         break;
     }
-  };
+  }
 }
 
-// TODO check type cast works
+// TODO(team): Check if type cast works.
 template <typename T>
 void TableScan::scan_dict_segment(const std::shared_ptr<DictionarySegment<T>>& segment, PosList& positions_list,
                                   ChunkID chunk_id) {
@@ -85,7 +85,7 @@ void TableScan::scan_dict_segment(const std::shared_ptr<DictionarySegment<T>>& s
   auto value_count = segment->size();
   const auto typed_search_value = type_cast<T>(search_value());
 
-  // TODO: Refactor into function
+  // TODO(team): Refactor into function.
   for (auto chunk_offset = ChunkOffset{0}; chunk_offset < value_count; ++chunk_offset) {
     auto value = dictionary[attribute_vector->get(chunk_offset)];
     const auto typed_given_value = type_cast<T>(value);
@@ -130,6 +130,7 @@ void TableScan::scan_reference_segment(const std::shared_ptr<ReferenceSegment> s
     const auto value = segment->get_row_id(row_id);
     const auto typed_given_value = value;
     const auto typed_search_value = search_value();
+    // TODO(team): Refactor into function.
     switch (scan_type()) {
       case ScanType::OpEquals:
         if (typed_given_value == typed_search_value) {
@@ -173,7 +174,6 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
   auto chunk_count = table->chunk_count();
   auto positions_list = std::make_shared<PosList>();
 
-  // go over all segments of table and depending on their type, collect the pos lists of the matching values to search value
   for (auto chunk_id = ChunkID{0}; chunk_id < chunk_count; chunk_id++) {
     auto segment = table->get_chunk(chunk_id)->get_segment(column_id());
 

@@ -11,8 +11,7 @@ class TableStatistics;
 // A table is partitioned horizontally into a number of chunks
 class Table : private Noncopyable {
  public:
-
-  // TODO: Use this in other places
+  // TODO(team): Use this in other places.
   struct ColumnDefinitionStruct {
     std::string column_name;
     std::string column_type;

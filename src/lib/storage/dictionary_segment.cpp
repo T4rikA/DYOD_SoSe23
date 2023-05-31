@@ -49,7 +49,7 @@ DictionarySegment<T>::DictionarySegment(const std::shared_ptr<AbstractSegment>& 
   }
   _dictionary.shrink_to_fit();
 
-  const auto attribute_vector = get_attribute_vector(last_index-1,value_segment_size);
+  const auto attribute_vector = get_attribute_vector(last_index - 1, value_segment_size);
 
   for (auto index = size_t{0}; index < value_segment_size; ++index) {
     if (value_segment->is_null(index)) {
