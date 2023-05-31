@@ -31,7 +31,7 @@ const AllTypeVariant& TableScan::search_value() const {
 
 template <typename T>
 void TableScan::scan_value_segment(const std::shared_ptr<ValueSegment<T>>& segment, PosList& positions_list,
-                                              ChunkID chunk_id) {
+                                   ChunkID chunk_id) {
   auto values = segment->values();
   auto value_count = segment->size();
 
@@ -78,8 +78,8 @@ void TableScan::scan_value_segment(const std::shared_ptr<ValueSegment<T>>& segme
 
 // TODO check type cast works
 template <typename T>
-void TableScan::scan_dict_segment(const std::shared_ptr<DictionarySegment<T>>& segment,
-                                                      PosList& positions_list, ChunkID chunk_id) {
+void TableScan::scan_dict_segment(const std::shared_ptr<DictionarySegment<T>>& segment, PosList& positions_list,
+                                  ChunkID chunk_id) {
   auto dictionary = segment->dictionary();
   auto attribute_vector = segment->attribute_vector();
   auto value_count = segment->size();
@@ -123,11 +123,46 @@ void TableScan::scan_dict_segment(const std::shared_ptr<DictionarySegment<T>>& s
         break;
     }
   }
-
 }
 
-void TableScan::scan_reference_segment(const std::shared_ptr<ReferenceSegment> segment,
-                                                           PosList& positions_list) {
+void TableScan::scan_reference_segment(const std::shared_ptr<ReferenceSegment> segment, PosList& positions_list) {
+  for (const auto row_id : *segment->pos_list()) {
+    const auto value = segment->get_row_id(row_id);
+    const auto typed_given_value = value;
+    const auto typed_search_value = search_value();
+    switch (scan_type()) {
+      case ScanType::OpEquals:
+        if (typed_given_value == typed_search_value) {
+          positions_list.push_back(row_id);
+        }
+        break;
+      case ScanType::OpNotEquals:
+        if (typed_given_value != typed_search_value) {
+          positions_list.push_back(row_id);
+        }
+        break;
+      case ScanType::OpLessThan:
+        if (typed_given_value < typed_search_value) {
+          positions_list.push_back(row_id);
+        }
+        break;
+      case ScanType::OpLessThanEquals:
+        if (typed_given_value <= typed_search_value) {
+          positions_list.push_back(row_id);
+        }
+        break;
+      case ScanType::OpGreaterThan:
+        if (typed_given_value > typed_search_value) {
+          positions_list.push_back(row_id);
+        }
+        break;
+      case ScanType::OpGreaterThanEquals:
+        if (typed_given_value >= typed_search_value) {
+          positions_list.push_back(row_id);
+        }
+        break;
+    }
+  }
 }
 
 std::shared_ptr<const Table> TableScan::_on_execute() {

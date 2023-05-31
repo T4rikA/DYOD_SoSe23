@@ -15,6 +15,8 @@ class ReferenceSegment : public AbstractSegment {
 
   AllTypeVariant operator[](const ChunkOffset chunk_offset) const override;
 
+  AllTypeVariant get_row_id(const RowID row_id) const;
+
   ChunkOffset size() const override;
 
   const std::shared_ptr<const PosList>& pos_list() const;
