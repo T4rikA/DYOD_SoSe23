@@ -26,6 +26,8 @@ class TableScan : public AbstractOperator {
   void scan_dict_segment(const std::shared_ptr<DictionarySegment<T>>& segment, PosList& positions_list,
                          ChunkID chunk_id);
   void scan_reference_segment(const std::shared_ptr<ReferenceSegment> segment, PosList& positions_list);
+  template <typename T>
+  bool compare(const T& a, const T& b);
   std::shared_ptr<const AbstractOperator> _in;
   ColumnID _column_id;
   ScanType _scan_type;
