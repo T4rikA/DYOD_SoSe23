@@ -57,7 +57,6 @@ void TableScan::scan_value_segment(const std::shared_ptr<ValueSegment<T>>& segme
         break;
       case ScanType::OpLessThan:
         if (typed_given_value < typed_search_value) {
-          std::cout << "value segment " << typed_given_value << "\n";
           positions_list.push_back(RowID{chunk_id, chunk_offset});
         }
         break;
@@ -110,7 +109,6 @@ void TableScan::scan_dict_segment(const std::shared_ptr<DictionarySegment<T>>& s
         break;
       case ScanType::OpLessThan:
         if (typed_given_value < typed_search_value) {
-          std::cout << "dict segment " << typed_given_value << "\n";
           positions_list.push_back(RowID{chunk_id, chunk_offset});
         }
         break;
@@ -150,7 +148,6 @@ void TableScan::scan_reference_segment(const std::shared_ptr<ReferenceSegment> s
         break;
       case ScanType::OpNotEquals:
         if (typed_given_value != typed_search_value) {
-          std::cout << "reference segment " << typed_given_value << "\n";
           positions_list.push_back(row_id);
         }
         break;
