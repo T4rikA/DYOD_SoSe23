@@ -37,7 +37,7 @@ void TableScan::scan_value_segment(const std::shared_ptr<ValueSegment<T>>& segme
 
   // TODO(team): Refactor into function.
   for (auto chunk_offset = ChunkOffset{0}; chunk_offset < value_count; ++chunk_offset) {
-    if(segment->is_null(chunk_offset) || variant_is_null(search_value())){
+    if (segment->is_null(chunk_offset) || variant_is_null(search_value())) {
       continue;
     }
 
@@ -83,14 +83,14 @@ void TableScan::scan_value_segment(const std::shared_ptr<ValueSegment<T>>& segme
 // TODO(team): Check if type cast works.
 template <typename T>
 void TableScan::scan_dict_segment(const std::shared_ptr<DictionarySegment<T>>& segment, PosList& positions_list,
-                                  ChunkID chunk_id) {      
+                                  ChunkID chunk_id) {
   auto dictionary = segment->dictionary();
   auto attribute_vector = segment->attribute_vector();
   auto value_count = segment->size();
 
   // TODO(team): Refactor into function.
   for (auto chunk_offset = ChunkOffset{0}; chunk_offset < value_count; ++chunk_offset) {
-    if(variant_is_null(segment->operator[](chunk_offset)) || variant_is_null(search_value())){
+    if (variant_is_null(segment->operator[](chunk_offset)) || variant_is_null(search_value())) {
       continue;
     }
     const auto typed_search_value = type_cast<T>(search_value());
@@ -136,7 +136,7 @@ void TableScan::scan_dict_segment(const std::shared_ptr<DictionarySegment<T>>& s
 void TableScan::scan_reference_segment(const std::shared_ptr<ReferenceSegment> segment, PosList& positions_list) {
   for (const auto row_id : *segment->pos_list()) {
     const auto value = segment->get_row_id(row_id);
-    if(variant_is_null(value) || variant_is_null(search_value())){
+    if (variant_is_null(value) || variant_is_null(search_value())) {
       continue;
     }
     const auto typed_given_value = value;
