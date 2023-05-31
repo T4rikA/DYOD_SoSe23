@@ -32,8 +32,8 @@ const AllTypeVariant& TableScan::search_value() const {
 template <typename T>
 void TableScan::scan_value_segment(const std::shared_ptr<ValueSegment<T>>& segment, PosList& positions_list,
                                               ChunkID chunk_id) {
-  auto values = segment.values();
-  auto value_count = segment.size();
+  auto values = segment->values();
+  auto value_count = segment->size();
 
   // TODO: Refactor into function
   for (auto chunk_offset = ChunkOffset{0}; chunk_offset < value_count; ++chunk_offset) {
@@ -44,43 +44,41 @@ void TableScan::scan_value_segment(const std::shared_ptr<ValueSegment<T>>& segme
     switch (scan_type()) {
       case ScanType::OpEquals:
         if (typed_given_value == typed_search_value) {
-          positions_list->push_back(RowID{chunk_id, chunk_offset});
+          positions_list.push_back(RowID{chunk_id, chunk_offset});
         }
         break;
       case ScanType::OpNotEquals:
         if (typed_given_value != typed_search_value) {
-          positions_list->push_back(RowID{chunk_id, chunk_offset});
+          positions_list.push_back(RowID{chunk_id, chunk_offset});
         }
         break;
       case ScanType::OpLessThan:
         if (typed_given_value < typed_search_value) {
-          positions_list->push_back(RowID{chunk_id, chunk_offset});
+          positions_list.push_back(RowID{chunk_id, chunk_offset});
         }
         break;
       case ScanType::OpLessThanEquals:
         if (typed_given_value <= typed_search_value) {
-          positions_list->push_back(RowID{chunk_id, chunk_offset});
+          positions_list.push_back(RowID{chunk_id, chunk_offset});
         }
         break;
       case ScanType::OpGreaterThan:
         if (typed_given_value > typed_search_value) {
-          positions_list->push_back(RowID{chunk_id, chunk_offset});
+          positions_list.push_back(RowID{chunk_id, chunk_offset});
         }
         break;
       case ScanType::OpGreaterThanEquals:
         if (typed_given_value >= typed_search_value) {
-          positions_list->push_back(RowID{chunk_id, chunk_offset});
+          positions_list.push_back(RowID{chunk_id, chunk_offset});
         }
         break;
     }
   };
-
-  return positions_list;
 }
 
 // TODO check type cast works
 template <typename T>
-std::shared_ptr<PosList> TableScan::scan_dict_segment(const std::shared_ptr<DictionarySegment<T>>& segment,
+void TableScan::scan_dict_segment(const std::shared_ptr<DictionarySegment<T>>& segment,
                                                       PosList& positions_list, ChunkID chunk_id) {
   auto dictionary = segment->dictionary();
   auto attribute_vector = segment->attribute_vector();
@@ -95,43 +93,41 @@ std::shared_ptr<PosList> TableScan::scan_dict_segment(const std::shared_ptr<Dict
     switch (scan_type()) {
       case ScanType::OpEquals:
         if (typed_given_value == typed_search_value) {
-          positions_list->push_back(RowID{chunk_id, chunk_offset});
+          positions_list.push_back(RowID{chunk_id, chunk_offset});
         }
         break;
       case ScanType::OpNotEquals:
         if (typed_given_value != typed_search_value) {
-          positions_list->push_back(RowID{chunk_id, chunk_offset});
+          positions_list.push_back(RowID{chunk_id, chunk_offset});
         }
         break;
       case ScanType::OpLessThan:
         if (typed_given_value < typed_search_value) {
-          positions_list->push_back(RowID{chunk_id, chunk_offset});
+          positions_list.push_back(RowID{chunk_id, chunk_offset});
         }
         break;
       case ScanType::OpLessThanEquals:
         if (typed_given_value <= typed_search_value) {
-          positions_list->push_back(RowID{chunk_id, chunk_offset});
+          positions_list.push_back(RowID{chunk_id, chunk_offset});
         }
         break;
       case ScanType::OpGreaterThan:
         if (typed_given_value > typed_search_value) {
-          positions_list->push_back(RowID{chunk_id, chunk_offset});
+          positions_list.push_back(RowID{chunk_id, chunk_offset});
         }
         break;
       case ScanType::OpGreaterThanEquals:
         if (typed_given_value >= typed_search_value) {
-          positions_list->push_back(RowID{chunk_id, chunk_offset});
+          positions_list.push_back(RowID{chunk_id, chunk_offset});
         }
         break;
     }
   }
 
-  return positions_list;
 }
 
-std::shared_ptr<PosList> TableScan::scan_reference_segment(const std::shared_ptr<ReferenceSegment> segment,
+void TableScan::scan_reference_segment(const std::shared_ptr<ReferenceSegment> segment,
                                                            PosList& positions_list) {
-  return positions_list;
 }
 
 std::shared_ptr<const Table> TableScan::_on_execute() {
@@ -140,7 +136,7 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
   auto column_count = table->column_count();
   auto data_type = table->column_type(column_id());
   auto chunk_count = table->chunk_count();
-  auto positions_list = PosList();
+  auto positions_list = std::make_shared<PosList>();
 
   // go over all segments of table and depending on their type, collect the pos lists of the matching values to search value
   for (auto chunk_id = ChunkID{0}; chunk_id < chunk_count; chunk_id++) {
@@ -149,18 +145,18 @@ std::shared_ptr<const Table> TableScan::_on_execute() {
     resolve_data_type(data_type, [&segment, this, &positions_list, &chunk_id](auto type) {
       using Type = typename decltype(type)::type;
 
-      auto typed_value_segment = std::dynamic_pointer_cast<ValueSegment<Type>>(segment);
-      auto typed_dict_segment = std::dynamic_pointer_cast<DictionarySegment<Type>>(segment);
-      auto reference_segment = std::dynamic_pointer_cast<ReferenceSegment>(segment);
+      const auto typed_value_segment = std::dynamic_pointer_cast<ValueSegment<Type>>(segment);
+      const auto typed_dict_segment = std::dynamic_pointer_cast<DictionarySegment<Type>>(segment);
+      const auto reference_segment = std::dynamic_pointer_cast<ReferenceSegment>(segment);
 
       Assert(typed_value_segment || typed_dict_segment || reference_segment,
              "TableScan error: segment is not from value segment, dict segment or reference segment.");
       if (typed_value_segment) {
-        scan_value_segment(typed_value_segment, positions_list, chunk_id);
+        scan_value_segment(typed_value_segment, *positions_list, chunk_id);
       } else if (typed_dict_segment) {
-        scan_dict_segment(typed_dict_segment, positions_list, chunk_id);
+        scan_dict_segment(typed_dict_segment, *positions_list, chunk_id);
       } else {
-        scan_reference_segment(reference_segment, positions_list);
+        scan_reference_segment(reference_segment, *positions_list);
       }
     });
   }
