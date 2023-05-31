@@ -283,4 +283,22 @@ TEST_F(OperatorsTableScanTest, ScanOnReferenceSegmentWithNullValue) {
   }
 }
 
+TEST_F(OperatorsTableScanTest, ReturnsCorrectColumn) {
+  const auto scan = std::make_shared<TableScan>(_table_wrapper, ColumnID{1}, ScanType::OpNotEquals, 42);
+
+  EXPECT_EQ(scan->column_id(), ColumnID{1});
+}
+
+TEST_F(OperatorsTableScanTest, ReturnsCorrectScanType) {
+  const auto scan = std::make_shared<TableScan>(_table_wrapper, ColumnID{0}, ScanType::OpNotEquals, 42);
+
+  EXPECT_EQ(scan->scan_type(), ScanType::OpNotEquals);
+}
+
+TEST_F(OperatorsTableScanTest, ReturnsCorrectSearchValue) {
+  const auto scan = std::make_shared<TableScan>(_table_wrapper, ColumnID{1}, ScanType::OpEquals, 1234);
+
+  EXPECT_EQ(scan->search_value(), AllTypeVariant{1234});
+}
+
 }  // namespace opossum

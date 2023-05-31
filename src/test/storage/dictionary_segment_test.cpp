@@ -139,4 +139,18 @@ TEST_F(StorageDictionarySegmentTest, MemoryUsageUInt32) {
             ((UINT16_MAX + 2)) * sizeof(int32_t) + ((UINT16_MAX + 2)) * sizeof(uint32_t));
 }
 
+TEST_F(StorageDictionarySegmentTest, AccessElementsViaGet) {
+  value_segment_int->append(1);
+  value_segment_int->append(2);
+
+  std::shared_ptr<AbstractSegment> segment;
+  segment = std::make_shared<DictionarySegment<int32_t>>(value_segment_int);
+  auto dict_segment = std::dynamic_pointer_cast<DictionarySegment<int32_t>>(segment);
+
+  // test get function
+  EXPECT_EQ(dict_segment->get(ChunkOffset{0}), 1);
+  EXPECT_EQ(dict_segment->get(ChunkOffset{1}), 2);
+  EXPECT_ANY_THROW(dict_segment->get(ChunkOffset{100}));
+}
+
 }  // namespace opossum

@@ -1,7 +1,6 @@
 #include "dictionary_segment.hpp"
 
 #include <map>
-#include <set>
 #include "fixed_width_integer_vector.hpp"
 #include "type_cast.hpp"
 #include "utils/assert.hpp"
